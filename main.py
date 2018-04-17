@@ -16,7 +16,7 @@ _TIMESTEP = 1 / TPS
 WORLD = world.World()
 CARS: [vehicle.Car] = []
 
-SCALE = 10.0
+SCALE = 5
 
 
 def scaler(x):
@@ -46,7 +46,7 @@ class Renderer(pyglet.window.Window):
 
     def start(self):
         a = new_car()
-        a.pos = (2, 2)
+        a.pos = (5, 3)
         # b = new_car()
         # b.pos = (20, 3)
         # b.body.angle = math.pi
@@ -119,7 +119,6 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
 
     def DrawSolidPolygon(self, vertices, colour, *args):
         g.glColor3f(*colour)
-        print(vertices)
         g.draw(len(vertices), g.GL_POLYGON,
                ("v2f",
                 tuple(map(scaler, itertools.chain.from_iterable(vertices))))

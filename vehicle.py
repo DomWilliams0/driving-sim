@@ -5,7 +5,7 @@ from Box2D import Box2D
 
 DIMENSIONS = (4.2, 1.8)
 ACCELERATION = 500
-BRAKE = ACCELERATION * 2
+BRAKE = ACCELERATION * 2.5
 
 
 class EngineState(Enum):
@@ -44,17 +44,18 @@ class Car(object):
 
         self.body.ApplyLinearImpulse(force, self.body.worldCenter, True)
 
-        print(self.velocity, self.body.mass, force)
-
     BRAKE_TICK = 0
 
     def _tick_engine_state(self):
         if self.BRAKE_TICK == 0:
-            self.BRAKE_TICK = 100
-        if self.BRAKE_TICK < 30:
+            self.BRAKE_TICK = 200
+
+        if self.BRAKE_TICK > 120:
+            ret = EngineState.ACCELERATE
+        elif self.BRAKE_TICK < 30:
             ret = EngineState.BRAKE
         else:
-            ret = EngineState.ACCELERATE
+            ret = EngineState.DRIFT
 
         self.BRAKE_TICK -= 1
         self.engine_state = ret
