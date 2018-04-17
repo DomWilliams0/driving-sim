@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import Box2D
-import math
 import pyglet
 import pyglet.graphics as g
 from future.moves import itertools
@@ -16,7 +15,7 @@ _TIMESTEP = 1 / TPS
 WORLD = world.World()
 CARS: [vehicle.Car] = []
 
-SCALE = 5
+SCALE = 3
 
 
 def scaler(x):
@@ -80,7 +79,7 @@ class Renderer(pyglet.window.Window):
     def render(self):
         g.glClear(g.gl.GL_COLOR_BUFFER_BIT)
 
-        WORLD.physics.DrawDebugData()
+        # WORLD.physics.DrawDebugData()
         for c in CARS:
             pos = c.pos
             dims = vehicle.DIMENSIONS

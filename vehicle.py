@@ -4,7 +4,7 @@ from enum import Enum, auto
 from Box2D import Box2D
 
 DIMENSIONS = (4.2, 1.8)
-ACCELERATION = 800
+ACCELERATION = 10000
 BRAKE = ACCELERATION * 2.5
 
 STOPPED_EPSILON = 0.8 ** 2
@@ -37,7 +37,7 @@ class Car(object):
         angle = self.body.angle
         forwards = Box2D.b2Vec2(math.cos(angle), math.sin(angle))
 
-        self._tick_engine_state()
+        self._tick_engine()
         force = (0, 0)
         if self.engine_state == EngineState.ACCELERATE:
             force = forwards * ACCELERATION
@@ -50,17 +50,19 @@ class Car(object):
             else:
                 self.body.linearVelocity = (0, 0)
 
-        self.body.ApplyLinearImpulse(force, self.body.worldCenter, True)
+        self.body.ApplyForce(force, self.body.worldCenter + (DIMENSIONS[0] / 4, 0), True)
 
     AWFUL_SEQ = \
-        [EngineState.ACCELERATE] * 150 + \
+        [EngineState.ACCELERATE] * 100 + \
         [EngineState.DRIFT] * 50 + \
         [EngineState.BRAKE] * 100
 
     AWFUL_SEQ.reverse()
 
-    def _tick_engine_state(self):
+    def _tick_engine(self):
         try:
-            self.engine_state = self.AWFUL_SEQ.pop()
+            new_state = self.AWFUL_SEQ.pop()
         except IndexError:
-            self.engine_state = EngineState.DRIFT
+            new_state = EngineState.DRIFT
+
+        self.engine_state = new_state

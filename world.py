@@ -10,5 +10,5 @@ class World(object):
     def create_vehicle_body(self):
         body: Box2D.b2Body = self.physics.CreateDynamicBody()
         # body.fixedRotation = True
-        fix: Box2D.b2Fixture = body.CreatePolygonFixture(box=vehicle.DIMENSIONS, density=163, friction=0.5)
+        fix: Box2D.b2Fixture = body.CreatePolygonFixture(box=vehicle.DIMENSIONS, density=16, friction=0.5)
         return body
