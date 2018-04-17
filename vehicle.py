@@ -4,8 +4,10 @@ from enum import Enum, auto
 from Box2D import Box2D
 
 DIMENSIONS = (4.2, 1.8)
-ACCELERATION = 500
+ACCELERATION = 800
 BRAKE = ACCELERATION * 2.5
+
+STOPPED_EPSILON = 0.8 ** 2
 
 
 class EngineState(Enum):
@@ -33,29 +35,32 @@ class Car(object):
 
     def tick(self):
         angle = self.body.angle
-        direction = Box2D.b2Vec2(math.cos(angle), math.sin(angle))
+        forwards = Box2D.b2Vec2(math.cos(angle), math.sin(angle))
 
         self._tick_engine_state()
         force = (0, 0)
         if self.engine_state == EngineState.ACCELERATE:
-            force = direction * ACCELERATION
+            force = forwards * ACCELERATION
         elif self.engine_state == EngineState.BRAKE:
-            force = direction * -BRAKE
+
+            if self.velocity.lengthSquared > STOPPED_EPSILON:
+                current_direction = self.velocity.copy()
+                current_direction.Normalize()
+                force = current_direction * -BRAKE
+            else:
+                self.body.linearVelocity = (0, 0)
 
         self.body.ApplyLinearImpulse(force, self.body.worldCenter, True)
 
-    BRAKE_TICK = 0
+    AWFUL_SEQ = \
+        [EngineState.ACCELERATE] * 150 + \
+        [EngineState.DRIFT] * 50 + \
+        [EngineState.BRAKE] * 100
+
+    AWFUL_SEQ.reverse()
 
     def _tick_engine_state(self):
-        if self.BRAKE_TICK == 0:
-            self.BRAKE_TICK = 200
-
-        if self.BRAKE_TICK > 120:
-            ret = EngineState.ACCELERATE
-        elif self.BRAKE_TICK < 30:
-            ret = EngineState.BRAKE
-        else:
-            ret = EngineState.DRIFT
-
-        self.BRAKE_TICK -= 1
-        self.engine_state = ret
+        try:
+            self.engine_state = self.AWFUL_SEQ.pop()
+        except IndexError:
+            self.engine_state = EngineState.DRIFT
