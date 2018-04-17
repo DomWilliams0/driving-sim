@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+import Box2D
+import math
 import pyglet
 import pyglet.graphics as g
-import Box2D
 from future.moves import itertools
 
 import vehicle
@@ -9,11 +10,17 @@ import world
 
 WINDOW_SIZE = (600, 600)
 
-TPS = 20
+TPS = 50
 _TIMESTEP = 1 / TPS
 
 WORLD = world.World()
-CARS = []
+CARS: [vehicle.Car] = []
+
+SCALE = 10.0
+
+
+def scaler(x):
+    return x * SCALE
 
 
 def new_car():
@@ -38,7 +45,11 @@ class Renderer(pyglet.window.Window):
             print(symbol)
 
     def start(self):
-        new_car().pos = (100, 100)
+        a = new_car()
+        a.pos = (2, 2)
+        # b = new_car()
+        # b.pos = (20, 3)
+        # b.body.angle = math.pi
 
         pyglet.clock.schedule(self._loop)
 
@@ -58,11 +69,33 @@ class Renderer(pyglet.window.Window):
         for c in CARS:
             c.tick()
 
+        WORLD.physics.Step(_TIMESTEP, 8, 3)
+
+    CAR_COLOUR = {
+        vehicle.EngineState.ACCELERATE: (50, 220, 50),
+        vehicle.EngineState.BRAKE: (220, 50, 50),
+        vehicle.EngineState.DRIFT: (150, 150, 150),
+    }
+
     def render(self):
         g.glClear(g.gl.GL_COLOR_BUFFER_BIT)
-        g.glLoadIdentity()
 
         WORLD.physics.DrawDebugData()
+        for c in CARS:
+            pos = c.pos
+            dims = vehicle.DIMENSIONS
+
+            colour = self.CAR_COLOUR[c.engine_state]
+
+            g.draw(4, g.GL_QUADS,
+                   ("v2f", (
+                       (pos[0] - dims[0]) * SCALE, (pos[1] - dims[1]) * SCALE,
+                       (pos[0] - dims[0]) * SCALE, (pos[1] + dims[1]) * SCALE,
+                       (pos[0] + dims[0]) * SCALE, (pos[1] + dims[1]) * SCALE,
+                       (pos[0] + dims[0]) * SCALE, (pos[1] - dims[1]) * SCALE,
+                   )),
+                   ("c3B", colour * 4),
+                   )
 
         self.flip()
 
@@ -76,10 +109,7 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
         print("DrawSolidCircle")
 
     def DrawSegment(self, p1, p2, color):
-        g.draw(2, g.GL_LINES,
-               ("v2f", (*p1, *p2)),
-               ("c3f", (*color, *color))
-               )
+        print("DrawSegment")
 
     def DrawCircle(self, center, radius, color):
         print("DrawCircle")
@@ -89,7 +119,11 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
 
     def DrawSolidPolygon(self, vertices, colour, *args):
         g.glColor3f(*colour)
-        g.draw(len(vertices), g.GL_POLYGON, ("v2f", list(itertools.chain.from_iterable(vertices))))
+        print(vertices)
+        g.draw(len(vertices), g.GL_POLYGON,
+               ("v2f",
+                tuple(map(scaler, itertools.chain.from_iterable(vertices))))
+               )
 
     def DrawTransform(self, xf):
         print("DrawTransform")
