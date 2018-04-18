@@ -15,11 +15,7 @@ _TIMESTEP = 1 / TPS
 WORLD = world.World()
 CARS: [vehicle.Car] = []
 
-SCALE = 5
-
-
-def scaler(x):
-    return x * SCALE
+SCALE = 10
 
 
 def new_car():
@@ -28,11 +24,58 @@ def new_car():
     return car
 
 
+def create_car_batch(dims):
+    batch = g.Batch()
+    group_wheels = g.Group()
+    group_car = g.Group(group_wheels)
+    wheel_colour = (200, 200, 200)
+
+    wheel_width = 1.2
+    wheel_height = 1
+
+    body: g.vertexdomain.VertexList = batch.add(
+        4, g.GL_QUADS, group_car,
+        ("v2f", (
+            0, 0,
+            dims[0] * 2, 0,
+            dims[0] * 2, dims[1] * 2,
+            0, dims[1] * 2,
+        )),
+        ("c3B", (255,) * 4 * 3)
+    )
+
+    wheel_bases = [
+        (wheel_width / 2, -wheel_height / 2),
+        (wheel_width / 2, -wheel_height / 2 + dims[1] * 2),
+        (dims[0] * 2 - wheel_width * 1.75, -wheel_height / 2 + dims[1] * 2),
+        (dims[0] * 2 - wheel_width * 1.75, -wheel_height / 2),
+    ]
+
+    wheels = list(itertools.chain.from_iterable(
+        (
+            base[0], base[1],
+            base[0] + wheel_width, base[1],
+            base[0] + wheel_width, base[1] + wheel_height,
+            base[0], base[1] + wheel_height
+        )
+        for base in wheel_bases))
+
+    count = len(wheels) // 2
+    batch.add(
+        count, g.GL_QUADS, group_wheels,
+        ("v2f", wheels),
+        ("c3B", (wheel_colour * count))
+    )
+
+    return batch, body
+
+
 class Renderer(pyglet.window.Window):
     def __init__(self):
         super().__init__(*WINDOW_SIZE)
         self.running = True
         self.acc = 0.0
+        self.car_batch = create_car_batch(vehicle.DIMENSIONS)
 
         WORLD.physics.renderer = PhysicsDebugRenderer()
         g.glClearColor(0.05, 0.05, 0.07, 1)
@@ -94,19 +137,18 @@ class Renderer(pyglet.window.Window):
 
             colour = self.CAR_COLOUR[c.engine_state]
 
-            g.glTranslatef(pos[0] * SCALE, pos[1] * SCALE, 0)
+            g.glScalef(SCALE, SCALE, 0)
+            g.glTranslatef(pos[0], pos[1], 0)
             g.glRotatef(c.angle, 0, 0, 1)
-            g.draw(4, g.GL_QUADS,
-                   ("v2f", (
-                       -dims[0] * SCALE, -dims[1] * SCALE,
-                       -dims[0] * SCALE, +dims[1] * SCALE,
-                       +dims[0] * SCALE, +dims[1] * SCALE,
-                       +dims[0] * SCALE, -dims[1] * SCALE,
-                   )),
-                   ("c3B", colour * 4),
-                   )
-            label.text = str(int(c.speed))
-            label.draw()
+            g.glTranslatef(-dims[0], -dims[1], 0)
+
+            (batch, body) = self.car_batch
+            body.colors = colour * 4
+            batch.draw()
+
+            # label.text = str(int(c.speed))
+            # label.draw()
+
             g.glPopMatrix()
 
         self.flip()
@@ -133,7 +175,7 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
         g.glColor3f(*colour)
         g.draw(len(vertices), g.GL_POLYGON,
                ("v2f",
-                tuple(map(scaler, itertools.chain.from_iterable(vertices))))
+                tuple(map(lambda x: x * SCALE, itertools.chain.from_iterable(vertices))))
                )
 
     def DrawTransform(self, xf):
