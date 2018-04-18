@@ -9,7 +9,7 @@ ACCELERATION = 10000
 REVERSE = 7000
 BRAKE = 20000
 
-STOPPED_EPSILON = 0.8 ** 2
+STOPPED_EPSILON = 1 ** 2
 
 KEYS = {W, A, S, D, SPACE}
 KEYS_POSITIVE = {W, A}
@@ -67,16 +67,18 @@ class Car(object):
         current_speed = Box2D.b2Dot(self._get_vec((1, 0)), current_forward_normal)
         self._speed = current_speed
 
+        stopped = self.velocity.lengthSquared < STOPPED_EPSILON
+
         force = 0
         if self.engine_state == EngineState.ACCELERATE:
             force = ACCELERATION
-        if self.engine_state == EngineState.REVERSE:
+        elif self.engine_state == EngineState.REVERSE:
             force = -ACCELERATION
+        elif stopped:
+            # both drift and brake
+            self.body.linearVelocity = (0, 0)  # stop
         elif self.engine_state == EngineState.BRAKE:
-            if self.velocity.lengthSquared > STOPPED_EPSILON:
-                force = -BRAKE if current_speed > 0 else BRAKE
-            else:
-                self.body.linearVelocity = (0, 0)  # stop
+            force = -BRAKE if current_speed > 0 else BRAKE
 
         self.body.ApplyForce(force * current_forward_normal, self.body.worldCenter, True)
 
@@ -84,8 +86,13 @@ class Car(object):
         if self.wheel_force == 0:
             self.body.angularVelocity = 0
         else:
-            # speed is scaled up to this speed when its max    vv
-            self.body.angularVelocity = self.wheel_force * min(30, current_speed) * 0.06
+            # maths
+            # rises quickly and plateaus until ~34, then gradually reduces
+            if abs(current_speed) < 34.135:  # where these 2 graphs intersect
+                mult = math.log(current_speed + 1)
+            else:
+                mult = (1 / (0.01 * current_speed) + 0.3) + 2
+            self.body.angularVelocity = self.wheel_force * mult * 0.5
 
     def _tick_engine(self):
         forwards = self.key_state[W] + self.key_state[S]
