@@ -131,12 +131,12 @@ class Renderer(pyglet.window.Window):
 
         WORLD.physics.DrawDebugData()
         for c in CARS:
-            g.glPushMatrix()
             pos = c.pos
             dims = vehicle.DIMENSIONS
 
             colour = self.CAR_COLOUR[c.engine_state]
 
+            g.glPushMatrix()
             g.glScalef(SCALE, SCALE, 0)
             g.glTranslatef(pos[0], pos[1], 0)
             g.glRotatef(c.angle, 0, 0, 1)
@@ -145,10 +145,13 @@ class Renderer(pyglet.window.Window):
             (batch, body) = self.car_batch
             body.colors = colour * 4
             batch.draw()
+            g.glPopMatrix()
 
-            # label.text = str(int(c.speed))
-            # label.draw()
+            g.glPushMatrix()
+            g.glTranslatef(pos[0] * SCALE, pos[1] * SCALE, 0)
 
+            label.text = str(int(c.speed))
+            label.draw()
             g.glPopMatrix()
 
         self.flip()
