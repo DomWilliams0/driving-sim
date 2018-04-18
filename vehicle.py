@@ -2,15 +2,16 @@ import math
 from enum import Enum, auto
 
 from Box2D import Box2D
-from pyglet.window.key import W, A, S, D
+from pyglet.window.key import W, A, S, D, SPACE
 
 DIMENSIONS = (4.2, 1.8)
 ACCELERATION = 10000
+REVERSE = 7000
 BRAKE = 20000
 
 STOPPED_EPSILON = 0.8 ** 2
 
-KEYS = {W, A, S, D}
+KEYS = {W, A, S, D, SPACE}
 KEYS_POSITIVE = {W, A}
 
 
@@ -18,6 +19,7 @@ class EngineState(Enum):
     ACCELERATE = auto()
     DRIFT = auto()
     BRAKE = auto()
+    REVERSE = auto()
 
 
 class Car(object):
@@ -68,9 +70,11 @@ class Car(object):
         force = 0
         if self.engine_state == EngineState.ACCELERATE:
             force = ACCELERATION
+        if self.engine_state == EngineState.REVERSE:
+            force = -ACCELERATION
         elif self.engine_state == EngineState.BRAKE:
             if self.velocity.lengthSquared > STOPPED_EPSILON:
-                force = -BRAKE
+                force = -BRAKE if current_speed > 0 else BRAKE
             else:
                 self.body.linearVelocity = (0, 0)  # stop
 
@@ -85,10 +89,13 @@ class Car(object):
 
     def _tick_engine(self):
         forwards = self.key_state[W] + self.key_state[S]
-        if forwards < 0:
+        brake = self.key_state[SPACE]
+        if brake:
             state = EngineState.BRAKE
         elif forwards > 0:
             state = EngineState.ACCELERATE
+        elif forwards < 0:
+            state = EngineState.REVERSE
         else:
             state = EngineState.DRIFT
         self.engine_state = state

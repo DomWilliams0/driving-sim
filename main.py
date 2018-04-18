@@ -121,6 +121,7 @@ class Renderer(pyglet.window.Window):
 
     CAR_COLOUR = {
         vehicle.EngineState.ACCELERATE: (50, 220, 50),
+        vehicle.EngineState.REVERSE: (50, 100, 255),
         vehicle.EngineState.BRAKE: (220, 50, 50),
         vehicle.EngineState.DRIFT: (150, 150, 150),
     }
