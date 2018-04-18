@@ -82,8 +82,13 @@ class Renderer(pyglet.window.Window):
 
     @staticmethod
     def on_key_press(symbol, modifiers):
+        global SCALE
         if symbol == pyglet.window.key.ESCAPE:
             pyglet.app.exit()
+        elif symbol == pyglet.window.key.PLUS:
+            SCALE += 1
+        elif symbol == pyglet.window.key.MINUS:
+            SCALE -= 1
         else:
             CARS[0].handle_key(symbol, True)
 
