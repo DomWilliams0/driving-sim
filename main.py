@@ -15,7 +15,7 @@ _TIMESTEP = 1 / TPS
 WORLD = world.World()
 CARS: [vehicle.Car] = []
 
-SCALE = 3
+SCALE = 5
 
 
 def scaler(x):

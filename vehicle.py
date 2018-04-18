@@ -7,8 +7,6 @@ from pyglet.window.key import W, A, S, D
 DIMENSIONS = (4.2, 1.8)
 ACCELERATION = 10000
 BRAKE = 20000
-WHEEL_TURN = 5
-MAX_WHEEL_ANGLE = 60
 
 STOPPED_EPSILON = 0.8 ** 2
 
@@ -26,7 +24,7 @@ class Car(object):
     def __init__(self, world):
         self.body: Box2D.b2Body = world.create_vehicle_body()
         self.engine_state = EngineState.DRIFT
-        self.wheel_angle = 0
+        self.wheel_force = 0
         self.key_state = {k: False for k in KEYS}
 
         self._speed = 0.0
@@ -56,9 +54,6 @@ class Car(object):
         return Box2D.b2Dot(normal, self.velocity) * normal
 
     def tick(self):
-        wheel_angle = math.radians(self.wheel_angle + self.body.angle)
-        self.body.angle = wheel_angle
-
         # kill lateral
         lateral = self._get_vec((0, 1))
         lateral_force = self.body.mass * -lateral
@@ -81,25 +76,12 @@ class Car(object):
 
         self.body.ApplyForce(force * current_forward_normal, self.body.worldCenter, True)
 
-    """ # forwards
-            angle = self.body.angle
-            forwards = Box2D.b2Vec2(math.cos(angle), math.sin(angle))
-
-            self._tick_engine()
-            force = (0, 0)
-            if self.engine_state == EngineState.ACCELERATE:
-                force = forwards * ACCELERATION
-            elif self.engine_state == EngineState.BRAKE:
-
-                if self.velocity.lengthSquared > STOPPED_EPSILON:
-                    current_direction = self.velocity.copy()
-                    current_direction.Normalize()
-                    force = current_direction * -BRAKE
-                else:
-                    self.body.linearVelocity = (0, 0)
-
-            print(force, lateral_force)
-        # self.body.ApplyForce(force, self.body.worldCenter, True)"""
+        # rotation
+        if self.wheel_force == 0:
+            self.body.angularVelocity = 0
+        else:
+            # speed is scaled up to this speed when its max    vv
+            self.body.angularVelocity = self.wheel_force * min(30, current_speed) * 0.06
 
     def _tick_engine(self):
         forwards = self.key_state[W] + self.key_state[S]
@@ -113,19 +95,7 @@ class Car(object):
 
         # wheel
         sideways = self.key_state[A] + self.key_state[D]
-        if sideways == 0:
-            if self.wheel_angle != 0:
-                self.wheel_angle -= int(math.copysign(WHEEL_TURN, self.wheel_angle))
-                if abs(self.wheel_angle) < WHEEL_TURN:
-                    self.wheel_angle = 0
-        else:
-            angle = self.wheel_angle + (sideways * WHEEL_TURN)
-            if angle < 0 and angle < -MAX_WHEEL_ANGLE:
-                angle = -MAX_WHEEL_ANGLE
-            elif angle > 0 and angle > MAX_WHEEL_ANGLE:
-                angle = MAX_WHEEL_ANGLE
-
-            self.wheel_angle = angle
+        self.wheel_force = sideways
 
     def handle_key(self, key, down):
         if key in KEYS:
