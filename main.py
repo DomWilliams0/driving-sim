@@ -53,7 +53,8 @@ class Renderer(pyglet.window.Window):
         a.pos = (5, 3)
         # b = new_car()
         # b.pos = (20, 3)
-        # b.body.angle = math.pi
+        # from math import pi
+        # b.body.angle = pi
 
         pyglet.clock.schedule(self._loop)
 
@@ -83,23 +84,30 @@ class Renderer(pyglet.window.Window):
 
     def render(self):
         g.glClear(g.gl.GL_COLOR_BUFFER_BIT)
+        label = pyglet.text.Label("", font_size=8, color=(0, 0, 0, 255), anchor_x="center", anchor_y="center")
 
-        # WORLD.physics.DrawDebugData()
+        WORLD.physics.DrawDebugData()
         for c in CARS:
+            g.glPushMatrix()
             pos = c.pos
             dims = vehicle.DIMENSIONS
 
             colour = self.CAR_COLOUR[c.engine_state]
 
+            g.glTranslatef(pos[0] * SCALE, pos[1] * SCALE, 0)
+            g.glRotatef(c.angle, 0, 0, 1)
             g.draw(4, g.GL_QUADS,
                    ("v2f", (
-                       (pos[0] - dims[0]) * SCALE, (pos[1] - dims[1]) * SCALE,
-                       (pos[0] - dims[0]) * SCALE, (pos[1] + dims[1]) * SCALE,
-                       (pos[0] + dims[0]) * SCALE, (pos[1] + dims[1]) * SCALE,
-                       (pos[0] + dims[0]) * SCALE, (pos[1] - dims[1]) * SCALE,
+                       -dims[0] * SCALE, -dims[1] * SCALE,
+                       -dims[0] * SCALE, +dims[1] * SCALE,
+                       +dims[0] * SCALE, +dims[1] * SCALE,
+                       +dims[0] * SCALE, -dims[1] * SCALE,
                    )),
                    ("c3B", colour * 4),
                    )
+            label.text = str(int(c.speed))
+            label.draw()
+            g.glPopMatrix()
 
         self.flip()
 
