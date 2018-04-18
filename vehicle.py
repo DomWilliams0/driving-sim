@@ -2,6 +2,7 @@ import math
 from enum import Enum, auto
 
 from Box2D import Box2D
+from pyglet.window.key import W, A, S, D
 
 DIMENSIONS = (4.2, 1.8)
 ACCELERATION = 10000
@@ -52,17 +53,24 @@ class Car(object):
 
         self.body.ApplyForce(force, self.body.worldCenter + (DIMENSIONS[0] / 4, 0), True)
 
-    AWFUL_SEQ = \
-        [EngineState.ACCELERATE] * 100 + \
-        [EngineState.DRIFT] * 50 + \
-        [EngineState.BRAKE] * 100
-
-    AWFUL_SEQ.reverse()
+    # TODO temporary but still should be specific to instance
+    KEYS = {W, A, S, D}
+    KEYS_POSITIVE = {W, A}
+    KEY_STATE = {k: False for k in KEYS}
 
     def _tick_engine(self):
-        try:
-            new_state = self.AWFUL_SEQ.pop()
-        except IndexError:
-            new_state = EngineState.DRIFT
+        forwards = self.KEY_STATE[W] + self.KEY_STATE[S]
+        sideways = self.KEY_STATE[A] + self.KEY_STATE[D]
 
-        self.engine_state = new_state
+        if forwards < 0:
+            state = EngineState.BRAKE
+        elif forwards > 0:
+            state = EngineState.ACCELERATE
+        else:
+            state = EngineState.DRIFT
+        self.engine_state = state
+
+    def handle_key(self, key, down):
+        if key in self.KEYS:
+            val = 1 if key in self.KEYS_POSITIVE else -1
+            self.KEY_STATE[key] = val if down else 0

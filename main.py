@@ -37,11 +37,16 @@ class Renderer(pyglet.window.Window):
         WORLD.physics.renderer = PhysicsDebugRenderer()
         g.glClearColor(0.05, 0.05, 0.07, 1)
 
-    def on_key_press(self, symbol, modifiers):
+    @staticmethod
+    def on_key_press(symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
             pyglet.app.exit()
         else:
-            print(symbol)
+            CARS[0].handle_key(symbol, True)
+
+    @staticmethod
+    def on_key_release(symbol, modifiers):
+        CARS[0].handle_key(symbol, False)
 
     def start(self):
         a = new_car()
