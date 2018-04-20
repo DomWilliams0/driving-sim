@@ -23,13 +23,39 @@ class EngineState(Enum):
 
 
 class Car(object):
+    LAST_ID = 0
+
+    class RoadTracker(object):
+        def __init__(self):
+            self.current = None
+            self.next = None
+
+        def entered(self, road):
+            if not self.current:
+                self.current = road
+            else:
+                self.next = road
+
+        def exited(self, road):
+            if road == self.current:
+                self.current = self.next
+
+            self.next = None
+
     def __init__(self, world):
-        self.body: Box2D.b2Body = world.create_vehicle_body()
+        self.LAST_ID += 1
+        self.id = self.LAST_ID
+
+        self.body: Box2D.b2Body = world.create_vehicle_body(self)
         self.engine_state = EngineState.DRIFT
         self.wheel_force = 0
         self.key_state = {k: False for k in KEYS}
+        self.road_tracker = self.RoadTracker()
 
         self._speed = 0.0
+
+    def __str__(self):
+        return "Car<{}>".format(self.id)
 
     @property
     def speed(self):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import math
 from itertools import chain
 
 import Box2D
@@ -31,26 +30,13 @@ def create_world_batch():
     batch = g.Batch()
     graph = WORLD.roads
 
-    road_width = vehicle.DIMENSIONS[1] * 2 * 5
     road_colour = (240, 240, 240)
     line_colour = (0, 0, 0)
 
-    def fatten_line(edge):
-        """https://stackoverflow.com/a/1937202"""
-        ((x0, y0), (x1, y1)) = edge
-        dx = x1 - x0
-        dy = y1 - y0
-        length = math.sqrt(dx * dx + dy * dy)
-        dx /= length
-        dy /= length
-        px = 0.5 * road_width * (-dy)
-        py = 0.5 * road_width * dx
-        yield from (x0 + px - py, y0 + py + px,
-                    x1 + px + py, y1 + py - px,
-                    x1 - px + py, y1 - (py + px),
-                    x0 - (px + py), y0 - (py - px))
+    def fatten(e):
+        yield from chain.from_iterable(world.fatten_line(e))
 
-    edges = list(chain.from_iterable(map(fatten_line, graph.edges)))
+    edges = list(chain.from_iterable(map(fatten, graph.edges)))
     count = graph.number_of_edges() * 4
 
     batch.add(
@@ -272,7 +258,7 @@ class Renderer(pyglet.window.Window):
             self.speed_label.draw()
             g.glPopMatrix()
 
-        WORLD.physics.DrawDebugData()
+        # WORLD.physics.DrawDebugData()
 
         self.fps_display.draw()
         self.flip()
@@ -284,7 +270,16 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
         self.AppendFlags(self.e_shapeBit)
 
     def DrawSolidCircle(self, center, radius, axis, color):
-        print("DrawSolidCircle")
+        g.glColor3f(*color)
+        center = center[0] * SCALE, center[1] * SCALE
+        g.draw(4, g.GL_QUADS,
+               ("v2f", (
+                   center[0] - radius, center[1] - radius,
+                   center[0] - radius, center[1] + radius,
+                   center[0] + radius, center[1] + radius,
+                   center[0] + radius, center[1] - radius,
+               )),
+               )
 
     def DrawSegment(self, p1, p2, color):
         print("DrawSegment")
