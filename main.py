@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+from itertools import chain
+
 import Box2D
 import pyglet
 import pyglet.graphics as g
-from future.moves import itertools
 
 import vehicle
 import world
@@ -22,6 +23,20 @@ def new_car():
     car = vehicle.Car(WORLD)
     CARS.append(car)
     return car
+
+
+def create_world_batch():
+    batch = g.Batch()
+    graph = WORLD.roads
+
+    edges = list(chain.from_iterable(chain.from_iterable(graph.edges)))
+    count = len(edges) // 2
+    batch.add(
+        count, g.GL_LINES, None,
+        ("v2f", edges)
+    )
+
+    return batch
 
 
 def create_car_batch(dims):
@@ -48,7 +63,7 @@ def create_car_batch(dims):
         (dims[0] * 2 - light_dims[0], -light_dims[1] * 0.2),
     ]
 
-    lights = list(itertools.chain.from_iterable(
+    lights = list(chain.from_iterable(
         (
             base[0], base[1],
             base[0] + light_dims[0], base[1],
@@ -73,6 +88,7 @@ class Renderer(pyglet.window.Window):
         self.running = True
         self.acc = 0.0
         self.car_batch = create_car_batch(vehicle.DIMENSIONS)
+        self.world_batch = create_world_batch()
 
         WORLD.physics.renderer = PhysicsDebugRenderer()
         g.glClearColor(0.05, 0.05, 0.07, 1)
@@ -132,7 +148,17 @@ class Renderer(pyglet.window.Window):
         g.glClear(g.gl.GL_COLOR_BUFFER_BIT)
         label = pyglet.text.Label("", font_size=8, color=(0, 0, 0, 255), anchor_x="center", anchor_y="center")
 
-        WORLD.physics.DrawDebugData()
+        g.glPushMatrix()
+        g.glScalef(SCALE, SCALE, 0)
+        g.glLineWidth(vehicle.DIMENSIONS[1] * SCALE * 8)
+        g.glColor3f(200, 20, 30)
+        self.world_batch.draw()
+        g.glLineWidth(1)
+        g.glColor3f(0, 0, 0)
+        self.world_batch.draw()
+        g.glPopMatrix()
+
+        # WORLD.physics.DrawDebugData()
         for c in CARS:
             pos = c.pos
             dims = vehicle.DIMENSIONS
@@ -181,7 +207,7 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
         g.glColor3f(*colour)
         g.draw(len(vertices), g.GL_POLYGON,
                ("v2f",
-                tuple(map(lambda x: x * SCALE, itertools.chain.from_iterable(vertices))))
+                tuple(map(lambda x: x * SCALE, chain.from_iterable(vertices))))
                )
 
     def DrawTransform(self, xf):
