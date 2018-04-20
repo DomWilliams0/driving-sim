@@ -89,7 +89,7 @@ class Car(object):
             # maths
             # rises quickly and plateaus until ~34, then gradually reduces
             if abs(current_speed) < 34.135:  # where these 2 graphs intersect
-                mult = math.log(current_speed + 1)
+                mult = math.log(abs(current_speed) + 1)
             else:
                 mult = (1 / (0.01 * current_speed) + 0.3) + 2
             self.body.angularVelocity = self.wheel_force * mult * 0.5
