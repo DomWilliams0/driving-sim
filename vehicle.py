@@ -88,10 +88,12 @@ class Car(object):
         else:
             # maths
             # rises quickly and plateaus until ~34, then gradually reduces
-            if abs(current_speed) < 34.135:  # where these 2 graphs intersect
-                mult = math.log(abs(current_speed) + 1)
+            abs_current = abs(current_speed)
+            if abs_current < 34.135:  # where these 2 graphs intersect
+                mult = math.log(abs_current + 1)
             else:
-                mult = (1 / (0.01 * current_speed) + 0.3) + 2
+                mult = (1 / (0.01 * abs_current) + 0.3) + 2
+            mult = math.copysign(mult, current_speed)
             self.body.angularVelocity = self.wheel_force * mult * 0.5
 
     def _tick_engine(self):
