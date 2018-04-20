@@ -83,8 +83,9 @@ def create_car_batch(dims):
 
 
 class Renderer(pyglet.window.Window):
-    def __init__(self):
-        super().__init__(*WINDOW_SIZE)
+    def __init__(self, fullscreen):
+        size = WINDOW_SIZE if not fullscreen else (None, None)
+        super().__init__(*size, fullscreen=fullscreen)
         self.running = True
         self.acc = 0.0
         self.car_batch = create_car_batch(vehicle.DIMENSIONS)
@@ -215,5 +216,5 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
 
 
 if __name__ == '__main__':
-    Renderer().start()
+    Renderer(True).start()
     pyglet.app.run()
