@@ -98,7 +98,7 @@ class Renderer(pyglet.window.Window):
         @property
         def offset(self):
             if self.tracking and self.following:
-                return self.following.pos * -SCALE + (WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2)
+                return self.following.pos * -SCALE + (WINDOW_SIZE[0] / 2, WINDOW_SIZE[1] / 2)
             else:
                 return self._offset
 
@@ -159,6 +159,11 @@ class Renderer(pyglet.window.Window):
     def on_key_release(self, symbol, modifiers):
         self.camera.handle_key(symbol, False) and \
         CARS[0].handle_key(symbol, False)
+
+    def on_resize(self, width, height):
+        super(Renderer, self).on_resize(width, height)
+        global WINDOW_SIZE
+        WINDOW_SIZE = (width, height)
 
     def start(self):
         a = new_car()
