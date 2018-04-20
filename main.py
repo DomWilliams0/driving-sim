@@ -13,7 +13,7 @@ WINDOW_SIZE = (600, 600)
 TPS = 50
 _TIMESTEP = 1 / TPS
 
-WORLD = world.World()
+WORLD = world.World("roads.tmx")
 CARS: [vehicle.Car] = []
 
 SCALE = 10

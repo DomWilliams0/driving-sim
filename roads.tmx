@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" tiledversion="1.1.4" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextobjectid="11">
+ <objectgroup name="Object Layer 1">
+  <object id="9" x="980.182" y="1679.45">
+   <polyline points="0,0 7.81818,-21.2727"/>
+  </object>
+  <object id="10" x="988.091" y="1658.36">
+   <polyline points="-0.0566761,-0.209186 17.5455,8.45455 11,22.6364"/>
+  </object>
+ </objectgroup>
+</map>
