@@ -108,7 +108,7 @@ class Renderer(pyglet.window.Window):
                 SCALE += 1
                 return
             elif key == pyglet.window.key.MINUS and down:
-                SCALE = max(0, SCALE - 1)
+                SCALE = max(1, SCALE - 1)
                 return
 
             propogate = False
