@@ -85,23 +85,34 @@ def create_car_batch(dims):
 
 class Renderer(pyglet.window.Window):
     class Camera(object):
-        def __init__(self):
+        def __init__(self, following=None):
             self.delta = [0, 0]
-            self.offset = [0, 0]
-            self.following = None
+            self._offset = [0, 0]
+            self.following = following
+            self.tracking = True
 
         def tick(self):
-            self.offset[0] += self.delta[0] * CAMERA_SPEED
-            self.offset[1] += self.delta[1] * CAMERA_SPEED
+            self._offset[0] += self.delta[0] * CAMERA_SPEED
+            self._offset[1] += self.delta[1] * CAMERA_SPEED
+
+        @property
+        def offset(self):
+            if self.tracking and self.following:
+                return self.following.pos * -SCALE + (WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2)
+            else:
+                return self._offset
 
         def handle_key(self, key, down):
             global SCALE
             if key == pyglet.window.key.PLUS and down:
                 SCALE += 1
+                return
             elif key == pyglet.window.key.MINUS and down:
                 SCALE = max(0, SCALE - 1)
+                return
 
-            elif key == pyglet.window.key.UP:
+            propogate = False
+            if key == pyglet.window.key.UP:
                 self.delta[1] = -1 if down else 0
             elif key == pyglet.window.key.DOWN:
                 self.delta[1] = 1 if down else 0
@@ -109,9 +120,19 @@ class Renderer(pyglet.window.Window):
                 self.delta[0] = 1 if down else 0
             elif key == pyglet.window.key.RIGHT:
                 self.delta[0] = -1 if down else 0
-
+            elif key == pyglet.window.key.LCTRL:
+                if down:
+                    self.tracking = True
             else:
-                return True
+                propogate = True
+
+            if sum(self.delta) != 0:
+                curr = self.offset
+                self.tracking = False
+                self._offset[0] = curr[0]
+                self._offset[1] = curr[1]
+
+            return propogate
 
     def __init__(self, fullscreen):
         size = WINDOW_SIZE if not fullscreen else (None, None)
@@ -142,6 +163,7 @@ class Renderer(pyglet.window.Window):
     def start(self):
         a = new_car()
         a.pos = (5, 3)
+        self.camera.following = a
         # b = new_car()
         # b.pos = (20, 3)
         # from math import pi
