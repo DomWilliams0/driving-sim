@@ -174,6 +174,9 @@ class Renderer(pyglet.window.Window):
         self.world_batch = create_world_batch()
 
         self.camera = self.Camera()
+        self.speed_label = pyglet.text.Label("", font_size=8, color=(0, 0, 0, 255),
+                                             anchor_x="center", anchor_y="center")
+        self.fps_display = pyglet.window.FPSDisplay(self)
 
         WORLD.physics.renderer = PhysicsDebugRenderer()
         g.glClearColor(0.05, 0.05, 0.07, 1)
@@ -236,7 +239,6 @@ class Renderer(pyglet.window.Window):
 
     def render(self):
         g.glClear(g.gl.GL_COLOR_BUFFER_BIT)
-        label = pyglet.text.Label("", font_size=8, color=(0, 0, 0, 255), anchor_x="center", anchor_y="center")
 
         g.glLoadIdentity()
         g.glTranslatef(self.camera.offset[0], self.camera.offset[1], 0)
@@ -246,7 +248,6 @@ class Renderer(pyglet.window.Window):
         self.world_batch.draw()
         g.glPopMatrix()
 
-        # WORLD.physics.DrawDebugData()
         for c in CARS:
             pos = c.pos
             dims = vehicle.DIMENSIONS
@@ -267,10 +268,13 @@ class Renderer(pyglet.window.Window):
             g.glPushMatrix()
             g.glTranslatef(pos[0] * SCALE, pos[1] * SCALE, 0)
 
-            label.text = str(int(c.speed))
-            label.draw()
+            self.speed_label.text = str(int(c.speed))
+            self.speed_label.draw()
             g.glPopMatrix()
 
+        WORLD.physics.DrawDebugData()
+
+        self.fps_display.draw()
         self.flip()
 
 
