@@ -26,7 +26,7 @@ class World(object):
                 for edge in edge_pairs(obj.points, obj.closed):
                     self.roads.add_edge(*edge)
 
-        padding = 10
+        padding = 1
         min_x = min(x[0] for x in self.roads) - padding
         min_y = min(x[1] for x in self.roads) - padding
         max_y = max(x[1] for x in self.roads)
