@@ -9,6 +9,7 @@ import vehicle
 import world
 
 WINDOW_SIZE = (600, 600)
+CAMERA_SPEED = 5
 
 TPS = 50
 _TIMESTEP = 1 / TPS
@@ -83,6 +84,35 @@ def create_car_batch(dims):
 
 
 class Renderer(pyglet.window.Window):
+    class Camera(object):
+        def __init__(self):
+            self.delta = [0, 0]
+            self.offset = [0, 0]
+            self.following = None
+
+        def tick(self):
+            self.offset[0] += self.delta[0] * CAMERA_SPEED
+            self.offset[1] += self.delta[1] * CAMERA_SPEED
+
+        def handle_key(self, key, down):
+            global SCALE
+            if key == pyglet.window.key.PLUS and down:
+                SCALE += 1
+            elif key == pyglet.window.key.MINUS and down:
+                SCALE = max(0, SCALE - 1)
+
+            elif key == pyglet.window.key.UP:
+                self.delta[1] = -1 if down else 0
+            elif key == pyglet.window.key.DOWN:
+                self.delta[1] = 1 if down else 0
+            elif key == pyglet.window.key.LEFT:
+                self.delta[0] = 1 if down else 0
+            elif key == pyglet.window.key.RIGHT:
+                self.delta[0] = -1 if down else 0
+
+            else:
+                return True
+
     def __init__(self, fullscreen):
         size = WINDOW_SIZE if not fullscreen else (None, None)
         super().__init__(*size, fullscreen=fullscreen)
@@ -91,23 +121,22 @@ class Renderer(pyglet.window.Window):
         self.car_batch = create_car_batch(vehicle.DIMENSIONS)
         self.world_batch = create_world_batch()
 
+        self.camera = self.Camera()
+
         WORLD.physics.renderer = PhysicsDebugRenderer()
         g.glClearColor(0.05, 0.05, 0.07, 1)
 
-    @staticmethod
-    def on_key_press(symbol, modifiers):
-        global SCALE
+    # key handlers should return a truthful value if the event should be propogated, or a falsey if it was consumed
+    def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
             pyglet.app.exit()
-        elif symbol == pyglet.window.key.PLUS:
-            SCALE += 1
-        elif symbol == pyglet.window.key.MINUS:
-            SCALE -= 1
-        else:
-            CARS[0].handle_key(symbol, True)
+            return
 
-    @staticmethod
-    def on_key_release(symbol, modifiers):
+        self.camera.handle_key(symbol, True) and \
+        CARS[0].handle_key(symbol, True)
+
+    def on_key_release(self, symbol, modifiers):
+        self.camera.handle_key(symbol, False) and \
         CARS[0].handle_key(symbol, False)
 
     def start(self):
@@ -138,6 +167,8 @@ class Renderer(pyglet.window.Window):
 
         WORLD.physics.Step(_TIMESTEP, 8, 3)
 
+        self.camera.tick()
+
     CAR_COLOUR = {
         vehicle.EngineState.ACCELERATE: (50, 220, 50),
         vehicle.EngineState.REVERSE: (50, 100, 255),
@@ -148,6 +179,9 @@ class Renderer(pyglet.window.Window):
     def render(self):
         g.glClear(g.gl.GL_COLOR_BUFFER_BIT)
         label = pyglet.text.Label("", font_size=8, color=(0, 0, 0, 255), anchor_x="center", anchor_y="center")
+
+        g.glLoadIdentity()
+        g.glTranslatef(self.camera.offset[0], self.camera.offset[1], 0)
 
         g.glPushMatrix()
         g.glScalef(SCALE, SCALE, 0)
@@ -216,5 +250,5 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
 
 
 if __name__ == '__main__':
-    Renderer(True).start()
+    Renderer(False).start()
     pyglet.app.run()

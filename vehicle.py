@@ -115,3 +115,5 @@ class Car(object):
         if key in KEYS:
             val = 1 if key in KEYS_POSITIVE else -1
             self.key_state[key] = val if down else 0
+        else:
+            return True
