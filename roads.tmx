@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" tiledversion="1.1.4" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextobjectid="11">
+<map version="1.0" tiledversion="1.1.4" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextobjectid="14">
  <objectgroup name="Object Layer 1">
-  <object id="9" x="980.182" y="1679.45">
-   <polyline points="0,0 7.81818,-21.2727"/>
+  <object id="11" x="965.333" y="1686">
+   <polygon points="0,0 -36,-54 25,-69.6667 145,-71.3333 160.333,7.66667 111.333,124.667 -77.3333,141.667 -63.3333,93.3333 60.6667,71.6667 74,2.33333 12,24.3333"/>
   </object>
-  <object id="10" x="988.091" y="1658.36">
-   <polyline points="-0.0566761,-0.209186 17.5455,8.45455 11,22.6364"/>
+  <object id="12" x="929.307" y="1632" rotation="-0.381452">
+   <polyline points="0,0 150,11 182.531,94.598"/>
+  </object>
+  <object id="13" x="978.222" y="1765.96">
+   <polyline points="0.0555556,0.0222222 64.4896,47.7813"/>
   </object>
  </objectgroup>
 </map>
