@@ -1,4 +1,5 @@
 import math
+import random
 
 import Box2D
 import networkx
@@ -7,19 +8,22 @@ from future.moves import itertools
 
 import vehicle
 
-LANE_WIDTH = (vehicle.DIMENSIONS[1] * 2) * 5
+# single lane
+LANE_WIDTH = (vehicle.DIMENSIONS[1] * 2) * 2
 
 
 def fatten_line(edge):
     """https://stackoverflow.com/a/1937202"""
-    ((x0, y0), (x1, y1)) = edge
+    (x0, y0), (x1, y1), data = edge
+    total_lanes = data["lanes"]
+
     dx = x1 - x0
     dy = y1 - y0
     length = math.sqrt(dx * dx + dy * dy)
     dx /= length
     dy /= length
-    px = 0.5 * LANE_WIDTH * (-dy)
-    py = 0.5 * LANE_WIDTH * dx
+    px = 0.5 * total_lanes * LANE_WIDTH * (-dy)
+    py = 0.5 * total_lanes * LANE_WIDTH * dx
     return ((x0 + px - py, y0 + py + px),
             (x1 + px + py, y1 + py - px),
             (x1 - px + py, y1 - (py + px)),
@@ -54,8 +58,12 @@ class CollisionDetector(Box2D.b2ContactListener):
 
 
 class RoadData(object):
-    def __init__(self, id):
+    def __init__(self, id, lanes):
         self.id = id
+        self.lanes = lanes
+
+    def __str__(self):
+        return "RoadData<{}:{} lanes>".format(self.id, self.lanes)
 
 
 class World(object):
@@ -77,7 +85,9 @@ class World(object):
         for layer in (l for l in map if isinstance(l, pytmx.TiledObjectGroup)):
             for obj in layer:
                 for edge in edge_pairs(obj.points, obj.closed):
-                    self.roads.add_edge(*edge, id=uid)
+                    # TODO allow lanes going other way too
+                    lanes = 2
+                    self.roads.add_edge(*edge, id=uid, lanes=lanes)
                     uid += 1
 
         padding = 1
@@ -91,15 +101,15 @@ class World(object):
         self._add_lane_collision_boxes()
 
     def _add_lane_collision_boxes(self):
-        rects = list(map(lambda e: (fatten_line(e[:2]), e[2]["id"]), self.roads.edges(data=True)))
+        rects = list(map(lambda e: (fatten_line(e), e[2]), self.roads.edges(data=True)))
         road_frame: Box2D.b2Body = self.physics.CreateStaticBody()
         shape = Box2D.b2PolygonShape()
         fix_def = Box2D.b2FixtureDef(shape=shape, isSensor=True)
 
-        for r, id in rects:
+        for r, data in rects:
             shape.vertices = r
             fix: Box2D.b2Fixture = road_frame.CreateFixture(fix_def)
-            fix.userData = id
+            fix.userData = RoadData(**data)
 
     def _gen_roads(self):
         a = 10

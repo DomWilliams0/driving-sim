@@ -36,23 +36,41 @@ def create_world_batch():
     def fatten(e):
         yield from chain.from_iterable(world.fatten_line(e))
 
-    edges = list(chain.from_iterable(map(fatten, graph.edges)))
-    count = graph.number_of_edges() * 4
+    all_edges = graph.edges(data=True)
 
+    edges = list(chain.from_iterable(map(fatten, all_edges)))
+    count = graph.number_of_edges() * 4
     batch.add(
         count, g.GL_QUADS, None,
         ("v2f", edges),
         ("c3B", road_colour * count),
     )
 
-    lines = list(chain.from_iterable(chain.from_iterable(graph.edges)))
-    count = len(lines) // 2
+    for i, (a, b, data) in enumerate(all_edges):
+        lanes = data["lanes"]
+        if lanes <= 1:
+            continue
 
-    batch.add(
-        count, g.GL_LINES, None,
-        ("v2f", lines),
-        ("c3B", line_colour * count),
-    )
+        (x1, y1), (x2, y2) = a, b
+        dx, dy = x2 - x1, y2 - y1
+
+        normal = Box2D.b2Vec2(-dy, dx)
+        normal.Normalize()
+        normal *= world.LANE_WIDTH
+
+        src = Box2D.b2Vec2(a) + normal * lanes/2
+        dst = Box2D.b2Vec2(b) + normal * lanes/2
+        for _ in range(lanes - 1):
+            src -= normal
+            dst -= normal
+
+            batch.add(
+                2, g.GL_LINES, None,
+                ("v2f", (
+                    *src, *dst
+                )),
+                ("c3B", line_colour * 2)
+            )
 
     return batch
 
@@ -109,8 +127,8 @@ class Renderer(pyglet.window.Window):
             self.tracking = True
 
         def tick(self):
-            self._offset[0] += self.delta[0] * CAMERA_SPEED
-            self._offset[1] += self.delta[1] * CAMERA_SPEED
+            self._offset[0] += self.delta[0] * CAMERA_SPEED * SCALE * 0.2
+            self._offset[1] += self.delta[1] * CAMERA_SPEED * SCALE * 0.2
 
         @property
         def offset(self):
