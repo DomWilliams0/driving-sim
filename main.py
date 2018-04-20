@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import math
 from itertools import chain
 
 import Box2D
@@ -30,11 +31,41 @@ def create_world_batch():
     batch = g.Batch()
     graph = WORLD.roads
 
-    edges = list(chain.from_iterable(chain.from_iterable(graph.edges)))
-    count = len(edges) // 2
+    road_width = vehicle.DIMENSIONS[1] * 2 * 5
+    road_colour = (240, 240, 240)
+    line_colour = (0, 0, 0)
+
+    def fatten_line(edge):
+        """https://stackoverflow.com/a/1937202"""
+        ((x0, y0), (x1, y1)) = edge
+        dx = x1 - x0
+        dy = y1 - y0
+        length = math.sqrt(dx * dx + dy * dy)
+        dx /= length
+        dy /= length
+        px = 0.5 * road_width * (-dy)
+        py = 0.5 * road_width * dx
+        yield from (x0 + px - py, y0 + py + px,
+                    x1 + px + py, y1 + py - px,
+                    x1 - px + py, y1 - (py + px),
+                    x0 - (px + py), y0 - (py - px))
+
+    edges = list(chain.from_iterable(map(fatten_line, graph.edges)))
+    count = graph.number_of_edges() * 4
+
+    batch.add(
+        count, g.GL_QUADS, None,
+        ("v2f", edges),
+        ("c3B", road_colour * count),
+    )
+
+    lines = list(chain.from_iterable(chain.from_iterable(graph.edges)))
+    count = len(lines) // 2
+
     batch.add(
         count, g.GL_LINES, None,
-        ("v2f", edges)
+        ("v2f", lines),
+        ("c3B", line_colour * count),
     )
 
     return batch
@@ -212,11 +243,6 @@ class Renderer(pyglet.window.Window):
 
         g.glPushMatrix()
         g.glScalef(SCALE, SCALE, 0)
-        g.glLineWidth(vehicle.DIMENSIONS[1] * SCALE * 8)
-        g.glColor3f(200, 20, 30)
-        self.world_batch.draw()
-        g.glLineWidth(1)
-        g.glColor3f(0, 0, 0)
         self.world_batch.draw()
         g.glPopMatrix()
 
