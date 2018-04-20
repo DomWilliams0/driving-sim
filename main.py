@@ -26,12 +26,11 @@ def new_car():
 
 def create_car_batch(dims):
     batch = g.Batch()
-    group_wheels = g.Group()
-    group_car = g.Group(group_wheels)
-    wheel_colour = (200, 200, 200)
+    group_car = g.Group()
+    group_lights = g.Group(group_car)
+    light_colour = (252, 142, 41)
 
-    wheel_width = 1.2
-    wheel_height = 1
+    light_dims = (0.7, 1)
 
     body: g.vertexdomain.VertexList = batch.add(
         4, g.GL_QUADS, group_car,
@@ -44,27 +43,25 @@ def create_car_batch(dims):
         ("c3B", (255,) * 4 * 3)
     )
 
-    wheel_bases = [
-        (wheel_width / 2, -wheel_height / 2),
-        (wheel_width / 2, -wheel_height / 2 + dims[1] * 2),
-        (dims[0] * 2 - wheel_width * 1.75, -wheel_height / 2 + dims[1] * 2),
-        (dims[0] * 2 - wheel_width * 1.75, -wheel_height / 2),
+    light_bases = [
+        (dims[0] * 2 - light_dims[0], dims[1] * 2 - light_dims[1] * 0.8),
+        (dims[0] * 2 - light_dims[0], -light_dims[1] * 0.2),
     ]
 
-    wheels = list(itertools.chain.from_iterable(
+    lights = list(itertools.chain.from_iterable(
         (
             base[0], base[1],
-            base[0] + wheel_width, base[1],
-            base[0] + wheel_width, base[1] + wheel_height,
-            base[0], base[1] + wheel_height
+            base[0] + light_dims[0], base[1],
+            base[0] + light_dims[0], base[1] + light_dims[1],
+            base[0], base[1] + light_dims[1]
         )
-        for base in wheel_bases))
+        for base in light_bases))
 
-    count = len(wheels) // 2
+    count = len(lights) // 2
     batch.add(
-        count, g.GL_QUADS, group_wheels,
-        ("v2f", wheels),
-        ("c3B", (wheel_colour * count))
+        count, g.GL_QUADS, group_lights,
+        ("v2f", lights),
+        ("c3B", (light_colour * count))
     )
 
     return batch, body
