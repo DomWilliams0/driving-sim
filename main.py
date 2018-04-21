@@ -17,7 +17,8 @@ _TIMESTEP = 1 / TPS
 WORLD = world.World("roads.tmx")
 CARS: [vehicle.Car] = []
 
-SCALE = 10
+SCALE = 4
+DEBUG = False
 
 
 def new_car():
@@ -33,44 +34,30 @@ def create_world_batch():
     road_colour = (240, 240, 240)
     line_colour = (0, 0, 0)
 
-    def fatten(e):
-        yield from chain.from_iterable(world.fatten_line(e))
-
     all_edges = graph.edges(data=True)
 
-    edges = list(chain.from_iterable(map(fatten, all_edges)))
-    count = graph.number_of_edges() * 4
+    all_rects = [world.fatten_line(e) for e in all_edges]
+    quads = []
+    for road in all_rects:
+        for lane in road:
+            quads.extend(chain.from_iterable(lane))
+
+    count = len(quads) // 2
     batch.add(
         count, g.GL_QUADS, None,
-        ("v2f", edges),
+        ("v2f", quads),
         ("c3B", road_colour * count),
     )
 
-    for i, (a, b, data) in enumerate(all_edges):
-        lanes = data["lanes"]
-        if lanes <= 1:
-            continue
-
-        (x1, y1), (x2, y2) = a, b
-        dx, dy = x2 - x1, y2 - y1
-
-        normal = Box2D.b2Vec2(-dy, dx)
-        normal.Normalize()
-        normal *= world.LANE_WIDTH
-
-        src = Box2D.b2Vec2(a) + normal * lanes/2
-        dst = Box2D.b2Vec2(b) + normal * lanes/2
-        for _ in range(lanes - 1):
-            src -= normal
-            dst -= normal
-
-            batch.add(
-                2, g.GL_LINES, None,
-                ("v2f", (
-                    *src, *dst
-                )),
-                ("c3B", line_colour * 2)
-            )
+    for road in all_rects:
+        lines = list(chain.from_iterable(list(chain.from_iterable(l[:2])) for l in road[1:]))
+        count = len(lines) // 2
+        print(lines)
+        batch.add(
+            count, g.GL_LINES, None,
+            ("v2f", lines),
+            ("c3B", line_colour * count),
+        )
 
     return batch
 
@@ -138,12 +125,15 @@ class Renderer(pyglet.window.Window):
                 return self._offset
 
         def handle_key(self, key, down):
-            global SCALE
+            global SCALE, DEBUG
             if key == pyglet.window.key.PLUS and down:
                 SCALE += 1
                 return
             elif key == pyglet.window.key.MINUS and down:
                 SCALE = max(1, SCALE - 1)
+                return
+            elif key == pyglet.window.key.J:
+                DEBUG = down
                 return
 
             propogate = False
@@ -276,7 +266,8 @@ class Renderer(pyglet.window.Window):
             self.speed_label.draw()
             g.glPopMatrix()
 
-        # WORLD.physics.DrawDebugData()
+        if DEBUG:
+            WORLD.physics.DrawDebugData()
 
         self.fps_display.draw()
         self.flip()
@@ -310,10 +301,11 @@ class PhysicsDebugRenderer(Box2D.b2Draw):
 
     def DrawSolidPolygon(self, vertices, colour, *args):
         g.glColor3f(*colour)
-        g.draw(len(vertices), g.GL_POLYGON,
-               ("v2f",
-                tuple(map(lambda x: x * SCALE, chain.from_iterable(vertices))))
-               )
+        polygon = tuple(map(lambda x: x * SCALE, chain.from_iterable(vertices)))
+        g.draw(len(vertices), g.GL_POLYGON, ("v2f", polygon))
+
+        g.glColor3f(1, 1, 1)
+        g.draw(len(vertices), g.GL_LINE_LOOP, ("v2f", polygon))
 
     def DrawTransform(self, xf):
         print("DrawTransform")

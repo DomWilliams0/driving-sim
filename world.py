@@ -1,5 +1,4 @@
 import math
-import random
 
 import Box2D
 import networkx
@@ -13,21 +12,36 @@ LANE_WIDTH = (vehicle.DIMENSIONS[1] * 2) * 2
 
 
 def fatten_line(edge):
-    """https://stackoverflow.com/a/1937202"""
-    (x0, y0), (x1, y1), data = edge
-    total_lanes = data["lanes"]
+    def gen():
+        """ty https://stackoverflow.com/a/1937202"""
+        (x0, y0), (x1, y1), data = edge
+        total_lanes = data["lanes"]
 
-    dx = x1 - x0
-    dy = y1 - y0
-    length = math.sqrt(dx * dx + dy * dy)
-    dx /= length
-    dy /= length
-    px = 0.5 * total_lanes * LANE_WIDTH * (-dy)
-    py = 0.5 * total_lanes * LANE_WIDTH * dx
-    return ((x0 + px - py, y0 + py + px),
-            (x1 + px + py, y1 + py - px),
-            (x1 - px + py, y1 - (py + px)),
-            (x0 - (px + py), y0 - (py - px)))
+        dx = x1 - x0
+        dy = y1 - y0
+        length = math.sqrt(dx * dx + dy * dy)
+        dx /= length
+        dy /= length
+
+        px = 0.5 * LANE_WIDTH * -dy
+        py = 0.5 * LANE_WIDTH * dx
+
+        x0 += px * total_lanes / 2
+        x1 += px * total_lanes / 2
+        y0 += py * total_lanes / 2
+        y1 += py * total_lanes / 2
+
+        for l in range(total_lanes):
+            yield ((x0 + px - py, y0 + py + px),
+                   (x1 + px + py, y1 + py - px),
+                   (x1 - px + py, y1 - (py + px)),
+                   (x0 - (px + py), y0 - (py - px)))
+            x0 -= px * 2
+            x1 -= px * 2
+            y0 -= py * 2
+            y1 -= py * 2
+
+    return list(gen())
 
 
 class CollisionDetector(Box2D.b2ContactListener):
@@ -57,15 +71,6 @@ class CollisionDetector(Box2D.b2ContactListener):
             cr[0].road_tracker.exited(cr[1])
 
 
-class RoadData(object):
-    def __init__(self, id, lanes):
-        self.id = id
-        self.lanes = lanes
-
-    def __str__(self):
-        return "RoadData<{}:{} lanes>".format(self.id, self.lanes)
-
-
 class World(object):
     def __init__(self, roads_file):
         self.physics = Box2D.b2World(gravity=(0, 0), contactListener=CollisionDetector())
@@ -80,6 +85,13 @@ class World(object):
             if closed and len(points) > 2:
                 yield (points[-1], points[0])
 
+        def calc_normal(edge):
+            (x1, y1), (x2, y2) = edge
+            dx, dy = x2 - x1, y2 - y1
+            normal = Box2D.b2Vec2(-dy, dx)
+            normal.Normalize()
+            return normal
+
         map = pytmx.TiledMap(roads_file)
         uid = 1
         for layer in (l for l in map if isinstance(l, pytmx.TiledObjectGroup)):
@@ -87,7 +99,7 @@ class World(object):
                 for edge in edge_pairs(obj.points, obj.closed):
                     # TODO allow lanes going other way too
                     lanes = 2
-                    self.roads.add_edge(*edge, id=uid, lanes=lanes)
+                    self.roads.add_edge(*edge, id=uid, lanes=lanes, normal=calc_normal(edge))
                     uid += 1
 
         padding = 1
@@ -106,10 +118,12 @@ class World(object):
         shape = Box2D.b2PolygonShape()
         fix_def = Box2D.b2FixtureDef(shape=shape, isSensor=True)
 
-        for r, data in rects:
-            shape.vertices = r
-            fix: Box2D.b2Fixture = road_frame.CreateFixture(fix_def)
-            fix.userData = RoadData(**data)
+        for lanes, data in rects:
+            # lane_count, normal = data["lanes"], data["normal"]
+            for (i, l) in enumerate(lanes):
+                shape.vertices = l
+                fix: Box2D.b2Fixture = road_frame.CreateFixture(fix_def)
+                fix.userData = {"id": data["id"], "lane": i}
 
     def _gen_roads(self):
         a = 10
