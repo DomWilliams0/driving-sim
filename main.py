@@ -170,6 +170,8 @@ class Renderer(pyglet.window.Window):
         self.camera = self.Camera()
         self.speed_label = pyglet.text.Label("", font_size=8, color=(0, 0, 0, 255),
                                              anchor_x="center", anchor_y="center")
+        self.debug_label = pyglet.text.Label("", font_size=10, color=(60, 180, 10, 255),
+                                             anchor_x="right", anchor_y="bottom")
         self.fps_display = pyglet.window.FPSDisplay(self)
 
         WORLD.physics.renderer = PhysicsDebugRenderer()
@@ -235,6 +237,10 @@ class Renderer(pyglet.window.Window):
         g.glClear(g.gl.GL_COLOR_BUFFER_BIT)
 
         g.glLoadIdentity()
+        self.debug_label.text = str(CARS[0].road_tracker.current)
+        self.debug_label.x = WINDOW_SIZE[0]
+        self.debug_label.draw()
+
         g.glTranslatef(self.camera.offset[0], self.camera.offset[1], 0)
 
         g.glPushMatrix()

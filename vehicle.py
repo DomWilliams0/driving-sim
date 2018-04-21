@@ -27,20 +27,23 @@ class Car(object):
 
     class RoadTracker(object):
         def __init__(self):
-            self.current = None
-            self.next = None
+            self.stack = []
 
         def entered(self, road):
-            if not self.current:
-                self.current = road
-            else:
-                self.next = road
+            self.stack.append(road)
 
         def exited(self, road):
-            if road == self.current:
-                self.current = self.next
+            self.stack.remove(road)
 
-            self.next = None
+        @property
+        def current(self):
+            try:
+                return self.stack[0]
+            except IndexError:
+                return None
+
+        def __str__(self):
+            return str(self.stack)
 
     def __init__(self, world):
         self.LAST_ID += 1
