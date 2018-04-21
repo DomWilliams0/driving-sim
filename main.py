@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import math
 from itertools import chain
 
 import Box2D
@@ -52,7 +53,6 @@ def create_world_batch():
     for road in all_rects:
         lines = list(chain.from_iterable(list(chain.from_iterable(l[:2])) for l in road[1:]))
         count = len(lines) // 2
-        print(lines)
         batch.add(
             count, g.GL_LINES, None,
             ("v2f", lines),
@@ -279,22 +279,32 @@ class Renderer(pyglet.window.Window):
         self.flip()
 
 
+_CIRCLE_ITERATIONS = 30
+_CIRCLE_S = math.sin(2 * math.pi / _CIRCLE_ITERATIONS)
+_CIRCLE_C = math.cos(2 * math.pi / _CIRCLE_ITERATIONS)
+
+
 class PhysicsDebugRenderer(Box2D.b2Draw):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.AppendFlags(self.e_shapeBit)
 
+    @staticmethod
+    def render_circle(x, y, radius, colour):
+        """https://gist.github.com/tsterker/1396796"""
+
+        dx, dy = radius, 0
+
+        g.glBegin(g.GL_TRIANGLE_FAN)
+        g.glColor3f(*colour)
+        g.glVertex2f(x, y)
+        for i in range(_CIRCLE_ITERATIONS + 1):
+            g.glVertex2f(x + dx, y + dy)
+            dx, dy = (dx * _CIRCLE_C - dy * _CIRCLE_S), (dy * _CIRCLE_C + dx * _CIRCLE_S)
+        g.glEnd()
+
     def DrawSolidCircle(self, center, radius, axis, color):
-        g.glColor3f(*color)
-        center = center[0] * SCALE, center[1] * SCALE
-        g.draw(4, g.GL_QUADS,
-               ("v2f", (
-                   center[0] - radius, center[1] - radius,
-                   center[0] - radius, center[1] + radius,
-                   center[0] + radius, center[1] + radius,
-                   center[0] + radius, center[1] - radius,
-               )),
-               )
+        self.render_circle(center[0] * SCALE, center[1] * SCALE, radius * SCALE, (1, 0, 0))
 
     def DrawSegment(self, p1, p2, color):
         print("DrawSegment")

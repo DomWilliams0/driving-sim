@@ -49,7 +49,10 @@ class Car(object):
         self.LAST_ID += 1
         self.id = self.LAST_ID
 
-        self.body: Box2D.b2Body = world.create_vehicle_body(self)
+        body, sight = world.create_vehicle_body(self)
+        self.body: Box2D.b2Body = body
+        self.sight: Box2D.b2Fixture = sight
+
         self.engine_state = EngineState.DRIFT
         self.wheel_force = 0
         self.key_state = {k: False for k in KEYS}

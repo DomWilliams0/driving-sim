@@ -125,6 +125,10 @@ class World(object):
                 fix: Box2D.b2Fixture = road_frame.CreateFixture(fix_def)
                 fix.userData = {"id": data["id"], "lane": i}
 
+        # to be detected by the cars sensor
+        for node in self.roads:
+            road_frame.CreateCircleFixture(pos=node, radius=1, isSensor=True)
+
     def _gen_roads(self):
         a = 10
         b = 50
@@ -141,6 +145,15 @@ class World(object):
         body: Box2D.b2Body = self.physics.CreateDynamicBody()
         body.linearDamping = 0.1
         body.CreatePolygonFixture(box=vehicle.DIMENSIONS, density=16, friction=0.5)
+
         detector: Box2D.b2Fixture = body.CreateCircleFixture(radius=1, isSensor=True)
         detector.userData = car
-        return body
+
+        sight_len = 40
+        width_mod = 2
+        sight = body.CreatePolygonFixture(vertices=[
+            (0, vehicle.DIMENSIONS[1] * width_mod),
+            (sight_len, vehicle.DIMENSIONS[1] * width_mod),
+            (sight_len, -vehicle.DIMENSIONS[1] * width_mod),
+            (0, -vehicle.DIMENSIONS[1] * width_mod)])
+        return body, sight
