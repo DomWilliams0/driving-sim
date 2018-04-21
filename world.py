@@ -6,8 +6,9 @@ import pytmx.pytmx as pytmx
 from future.moves import itertools
 
 import vehicle
-
 # single lane
+from collision import LaneUserData, CarLaneDetectorUserData, CarSightUserData, RoadJoinUserData, CollisionDetector
+
 LANE_WIDTH = (vehicle.DIMENSIONS[1] * 2) * 2
 
 
@@ -44,33 +45,6 @@ def fatten_line(edge):
     return list(gen())
 
 
-class CollisionDetector(Box2D.b2ContactListener):
-
-    @staticmethod
-    def _car_and_road(contact):
-        """Returns (car, road) or None"""
-        a = contact.fixtureA.userData
-        b = contact.fixtureB.userData
-
-        a_car = isinstance(a, vehicle.Car)
-        b_car = isinstance(b, vehicle.Car)
-        if (a_car ^ b_car) and (a_car or b_car):
-            if a_car:
-                return a, b
-            else:
-                return b, a
-
-    def BeginContact(self, contact: Box2D.b2Contact):
-        cr = CollisionDetector._car_and_road(contact)
-        if cr:
-            cr[0].road_tracker.entered(cr[1])
-
-    def EndContact(self, contact):
-        cr = CollisionDetector._car_and_road(contact)
-        if cr:
-            cr[0].road_tracker.exited(cr[1])
-
-
 class World(object):
     def __init__(self, roads_file):
         self.physics = Box2D.b2World(gravity=(0, 0), contactListener=CollisionDetector())
@@ -99,6 +73,7 @@ class World(object):
                 for edge in edge_pairs(obj.points, obj.closed):
                     # TODO allow lanes going other way too
                     lanes = 2
+                    self.roads.add_nodes_from(edge, id=uid)
                     self.roads.add_edge(*edge, id=uid, lanes=lanes, normal=calc_normal(edge))
                     uid += 1
 
@@ -123,11 +98,12 @@ class World(object):
             for (i, l) in enumerate(lanes):
                 shape.vertices = l
                 fix: Box2D.b2Fixture = road_frame.CreateFixture(fix_def)
-                fix.userData = {"id": data["id"], "lane": i}
+                fix.userData = LaneUserData(data["id"], i)
 
         # to be detected by the cars sensor
-        for node in self.roads:
-            road_frame.CreateCircleFixture(pos=node, radius=1, isSensor=True)
+        nodes = networkx.get_node_attributes(self.roads, "id")
+        for (node, id) in nodes.items():
+            road_frame.CreateCircleFixture(pos=node, radius=1, isSensor=True, userData=RoadJoinUserData(id))
 
     def _gen_roads(self):
         a = 10
@@ -147,7 +123,7 @@ class World(object):
         body.CreatePolygonFixture(box=vehicle.DIMENSIONS, density=16, friction=0.5)
 
         detector: Box2D.b2Fixture = body.CreateCircleFixture(radius=1, isSensor=True)
-        detector.userData = car
+        detector.userData = CarLaneDetectorUserData(car)
 
         sight_len = 40
         width_mod = 2
@@ -156,4 +132,5 @@ class World(object):
             (sight_len, vehicle.DIMENSIONS[1] * width_mod),
             (sight_len, -vehicle.DIMENSIONS[1] * width_mod),
             (0, -vehicle.DIMENSIONS[1] * width_mod)])
+        sight.userData = CarSightUserData(car)
         return body, sight
