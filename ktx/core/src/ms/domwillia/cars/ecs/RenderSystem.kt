@@ -5,6 +5,7 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
@@ -20,13 +21,11 @@ const val CAMERA_ZOOM_SPEED = 0.05F
 
 class RenderSystem(
         private val world: World,
+        private val camera: OrthographicCamera,
         private val cameraInput: CameraInput
 ) : IteratingSystem(
         Family.all(PhysicsComponent::class.java, DummyRenderComponent::class.java).get()
 ) {
-    private val camera = OrthographicCamera()
-
-
     private val physics = ComponentMapper.getFor(PhysicsComponent::class.java)
     private val render = ComponentMapper.getFor(DummyRenderComponent::class.java)
     private val renderer = ShapeRenderer()

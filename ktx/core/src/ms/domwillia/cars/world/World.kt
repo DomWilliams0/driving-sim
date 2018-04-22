@@ -7,13 +7,17 @@ import com.badlogic.gdx.maps.tiled.TiledMap
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.math.Vector2
 import org.jgrapht.graph.DirectedPseudograph
+import com.badlogic.gdx.physics.box2d.World as PhysicsWorld
 
 typealias RoadNode = Vector2
 
 data class RoadEdge(val id: Int, val src: Vector2, val dst: Vector2, val lanes: Int)
 
 class World(path: String) {
+    val physics = PhysicsWorld(Vector2.Zero, true)
+
     private var nextEdgeId = 1
+
     val roadGraph = DirectedPseudograph<RoadNode, RoadEdge>(
             { src, dst -> RoadEdge(nextEdgeId++, src, dst, 2) })
 
