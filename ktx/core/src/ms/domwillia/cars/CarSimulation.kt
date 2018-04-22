@@ -1,7 +1,7 @@
 package ms.domwillia.cars
 
 import ktx.app.KtxGame
-import ms.domwillia.cars.screens.SimScreen
+import ms.domwillia.cars.view.SimScreen
 
 class CarSimulation : KtxGame<SimScreen>() {
 
@@ -11,8 +11,6 @@ class CarSimulation : KtxGame<SimScreen>() {
         setScreen<SimScreen>()
     }
 
-    override fun render() {
-    }
 
     override fun dispose() {
     }
