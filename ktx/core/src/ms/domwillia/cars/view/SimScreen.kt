@@ -26,7 +26,9 @@ class SimScreen(world: World) : KtxScreen {
         addSystem(driverInput.inputSystem)
         addSystem(RenderSystem(world, camera, cameraInput))
 
-        addEntity(createVehicleEntity(world.physics, Vector2(1F, 2F), InputComponent()))
+        val player = createVehicleEntity(world.physics, Vector2(1F, 2F), InputComponent())
+        cameraInput.follow(player)
+        addEntity(player)
         addEntity(createVehicleEntity(world.physics, Vector2(3F, 2F), AIInputComponent(0)))
         addEntity(createVehicleEntity(world.physics, Vector2(5F, 2F)))
     }
