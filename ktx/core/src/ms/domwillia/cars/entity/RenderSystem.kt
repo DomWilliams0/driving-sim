@@ -42,6 +42,7 @@ class RenderSystem(
 
         // world
         renderer.begin(ShapeRenderer.ShapeType.Filled)
+        renderer.identity()
         renderer.color = Color.DARK_GRAY
         val roadWidth = 10F
         for (edge in world.roadGraph.edgeSet()) renderer.rectLine(edge.src, edge.dst, roadWidth)
@@ -53,11 +54,17 @@ class RenderSystem(
     }
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
-        val pos = physicsGetter.get(entity).body.position
+        val body = physicsGetter.get(entity).body
+        val pos = body.position
         val ren = renderGetter.get(entity)
+
+        renderer.identity()
+        renderer.translate(pos.x, pos.y, 0F)
+        renderer.rotate(0F, 0F, 1F, Math.toDegrees(body.angle.toDouble()).toFloat())
+
         renderer.color = ren.colour
         renderer.rect(
-                pos.x - ren.dimensions.x / 2, pos.y - ren.dimensions.y / 2,
+                -ren.dimensions.x / 2, -ren.dimensions.y / 2,
                 ren.dimensions.x, ren.dimensions.y)
     }
 

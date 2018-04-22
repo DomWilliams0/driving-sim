@@ -6,6 +6,7 @@ import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
 import com.badlogic.gdx.math.Vector2
 import kotlin.math.absoluteValue
+import kotlin.math.ln
 
 class VehicleSystem : IteratingSystem(
         Family.all(VehicleComponent::class.java, PhysicsComponent::class.java).get()
@@ -24,15 +25,20 @@ class VehicleSystem : IteratingSystem(
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
         val body = physicsGetter.get(entity).body
-        val engineState = engineGetter.get(entity).engineState
+        val engine = engineGetter.get(entity)
+        val engineState = engine.engineState
 
-        // TODO kill lateral motion
+        // kill lateral motion
+        val sideways = body.getWorldVector(Vector2.X)
+        val lateral = Vector2(sideways).scl(sideways.dot(body.linearVelocity)).scl(-body.mass)
+        body.applyLinearImpulse(lateral, body.worldCenter, true)
 
         // forwards motion
         val forwards = body.getWorldVector(Vector2.Y)
         var stop = false
         val currentSpeed = Vector2(forwards).scl(forwards.dot(body.linearVelocity)).dot(forwards)
-        if (currentSpeed.absoluteValue < STOPPED_EPSILON)
+        val currentAbs = currentSpeed.absoluteValue
+        if (currentAbs < STOPPED_EPSILON)
             stop = true
 
         var force = 0
@@ -50,7 +56,19 @@ class VehicleSystem : IteratingSystem(
         val scl = forwards.scl(force.toFloat())
         body.applyForceToCenter(scl, true)
 
-        // TODO rotation
+        // rotation
+        if (engine.wheelsForce == 0)
+            body.angularVelocity = 0F
+        else {
+            // rises quickly and plateaus until ~34, then gradually reduces
+            var mult: Float = if (currentAbs < 34.135) // where these 2 lines intersect
+                ln(currentAbs + 1)
+            else
+                (1F / (0.01F * currentAbs) + 0.3F) + 2
+
+            mult = Math.copySign(mult, currentSpeed)
+            body.angularVelocity = engine.wheelsForce * mult * -0.5F
+        }
     }
 
 }
@@ -66,7 +84,6 @@ class PlayerDrivingSystem : IteratingSystem(
         val engine = engineGetter.get(entity)
         val input = inputGetter.get(entity)
 
-
         val forwards = input.delta[InputSystem.DY]
         val brake = input.delta[InputSystem.DBRAKE]
 
@@ -76,6 +93,9 @@ class PlayerDrivingSystem : IteratingSystem(
             forwards < 0 -> EngineState.REVERSE
             else -> EngineState.DRIFT
         }
+
+        val sideways = input.delta[InputSystem.DX]
+        engine.wheelsForce = sideways
     }
 }
 
