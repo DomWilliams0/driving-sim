@@ -11,13 +11,17 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.MathUtils
 import ms.domwillia.cars.view.CameraInput
+import ms.domwillia.cars.world.World
 
 const val PPM = 5F
 const val CAMERA_MOVE_SPEED = 1F
 const val CAMERA_ZOOM_SPEED = 0.05F
 
 
-class RenderSystem(private val cameraInput: CameraInput) : IteratingSystem(
+class RenderSystem(
+        private val world: World,
+        private val cameraInput: CameraInput
+) : IteratingSystem(
         Family.all(PhysicsComponent::class.java, DummyRenderComponent::class.java).get()
 ) {
     private val camera = OrthographicCamera()
@@ -37,6 +41,15 @@ class RenderSystem(private val cameraInput: CameraInput) : IteratingSystem(
         renderer.projectionMatrix = camera.combined
 
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+
+        // world
+        renderer.begin(ShapeRenderer.ShapeType.Filled)
+        renderer.color = Color.DARK_GRAY
+        val roadWidth = 10F
+        for (edge in world.roadGraph.edgeSet()) renderer.rectLine(edge.src, edge.dst, roadWidth)
+        for (v in world.roadGraph.vertexSet()) renderer.circle(v.x, v.y, roadWidth / 2)
+        renderer.end()
+
         renderer.begin(ShapeRenderer.ShapeType.Line)
         super.update(deltaTime)
         renderer.end()

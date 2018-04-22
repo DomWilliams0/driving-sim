@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlinVersion = '1.1.1'
+    ext.kotlinVersion = '1.2.31'
 
     repositories {
         mavenLocal()
@@ -58,6 +58,8 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
         compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+        compile group: 'org.jgrapht', name: 'jgrapht-core', version: '1.1.0'
+
 
         for (String module : Arrays.asList(
                 "app", "ashley", "box2d", "collections"

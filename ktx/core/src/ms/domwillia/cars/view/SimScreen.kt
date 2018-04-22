@@ -16,13 +16,14 @@ import ms.domwillia.cars.ecs.DummyRenderComponent
 import ms.domwillia.cars.ecs.PhysicsComponent
 import ms.domwillia.cars.ecs.PhysicsSystem
 import ms.domwillia.cars.ecs.RenderSystem
+import ms.domwillia.cars.world.World
 
-class SimScreen : KtxScreen {
+class SimScreen(world: World) : KtxScreen {
 
     private val cameraInput = CameraInput()
     private val engine = Engine().apply {
         addSystem(PhysicsSystem())
-        addSystem(RenderSystem(cameraInput))
+        addSystem(RenderSystem(world, cameraInput))
 
         addEntity(Entity().apply {
             val dummyBody = getSystem(PhysicsSystem::class.java).world.body(BodyDef.BodyType.DynamicBody)
