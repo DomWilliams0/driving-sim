@@ -15,9 +15,18 @@ const val VEHICLE_HEIGHT = 4.2F
 val VEHICLE_DIMENSIONS = Vector2(VEHICLE_WIDTH, VEHICLE_HEIGHT)
 val VEHICLE_HALF_DIMENSIONS = Vector2(VEHICLE_WIDTH / 2F, VEHICLE_HEIGHT / 2F)
 
+
+enum class EngineState {
+    DRIFT,
+    ACCELERATE,
+    BRAKE,
+    REVERSE
+}
+
+
 data class RenderComponent(val colour: Color, val dimensions: Vector2) : Component
 
-data class EngineComponent(val dummy: Int) : Component
+data class VehicleComponent(val engineState: EngineState = EngineState.ACCELERATE) : Component
 
 data class PhysicsComponent(val body: Body) : Component
 
@@ -50,7 +59,7 @@ fun createVehicleEntity(physics: World): Entity {
 
     e.add(PhysicsComponent(body))
     e.add(render())
-    e.add(EngineComponent(0))
+    e.add(VehicleComponent())
 
     return e
 }
