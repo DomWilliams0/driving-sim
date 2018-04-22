@@ -5,15 +5,19 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
 import com.badlogic.gdx.math.Vector2
-
-const val ACCELERATION = 5_000
-const val REVERSE = 7_000
-const val BRAKE = 15_000
-const val STOPPED_EPSILON_SQRD = 1
+import kotlin.math.absoluteValue
 
 class VehicleSystem : IteratingSystem(
         Family.all(VehicleComponent::class.java, PhysicsComponent::class.java).get()
 ) {
+    companion object {
+        val ACCELERATION = 1400
+        val REVERSE = 1000
+        val BRAKE = 6000
+        val STOPPED_EPSILON = 1.5
+    }
+
+
     private val engineGetter = ComponentMapper.getFor(VehicleComponent::class.java)
     private val physicsGetter = ComponentMapper.getFor(PhysicsComponent::class.java)
 
@@ -26,20 +30,22 @@ class VehicleSystem : IteratingSystem(
 
         // forwards motion
         val forwards = body.getWorldVector(Vector2.Y)
-        val currentSpeed = let {
-            var speed = Vector2(forwards).scl(forwards.dot(body.linearVelocity)).dot(forwards)
-            if (speed < STOPPED_EPSILON_SQRD) {
-                body.linearVelocity.setZero()
-                speed = 0F
-            }
-            speed
-        }
+        var stop = false
+        val currentSpeed = Vector2(forwards).scl(forwards.dot(body.linearVelocity)).dot(forwards)
+        if (currentSpeed.absoluteValue < STOPPED_EPSILON)
+            stop = true
 
-        val force = when (engineState) {
-            EngineState.ACCELERATE -> ACCELERATION
-            EngineState.REVERSE -> -REVERSE
-            EngineState.BRAKE -> if (currentSpeed > 0) -BRAKE else BRAKE
-            else -> 0
+        var force = 0
+        when {
+            engineState == EngineState.ACCELERATE -> force = ACCELERATION
+            engineState == EngineState.REVERSE -> force = -REVERSE
+            stop -> {
+                body.setLinearVelocity(0F, 0F)
+            }
+            engineState == EngineState.BRAKE -> when {
+                currentSpeed > 0 -> force = -BRAKE
+                currentSpeed < 0 -> force = BRAKE
+            }
         }
         val scl = forwards.scl(force.toFloat())
         body.applyForceToCenter(scl, true)
