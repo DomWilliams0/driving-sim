@@ -26,14 +26,19 @@ enum class EngineState {
 
 data class RenderComponent(val colour: Color, val dimensions: Vector2) : Component
 
-data class VehicleComponent(val engineState: EngineState = EngineState.ACCELERATE) : Component
+data class VehicleComponent(var engineState: EngineState = EngineState.DRIFT) : Component
+
+data class AIInputComponent(val dummy: Int) : Component
+
+data class InputComponent(val delta: IntArray = IntArray(InputSystem.DELTA_COUNT)) : Component
 
 data class PhysicsComponent(val body: Body) : Component
 
-fun createVehicleEntity(physics: World): Entity {
-    fun physics(): Body =
-            physics.body(BodyDef.BodyType.DynamicBody) {
+fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null): Entity {
+    fun physics(): Component =
+            PhysicsComponent(physics.body(BodyDef.BodyType.DynamicBody) {
                 linearDamping = 0.1F
+                position.set(pos)
 
                 let {
                     val chassisShape = PolygonShape().apply {
@@ -44,7 +49,7 @@ fun createVehicleEntity(physics: World): Entity {
                     fix.friction = 0.5F
                 }
                 // TODO detector and sight
-            }
+            })
 
     fun render(): Component {
         val colour = Color.FIREBRICK // TODO random colour?
@@ -54,12 +59,12 @@ fun createVehicleEntity(physics: World): Entity {
 
 
     val e = Entity()
+            .add(physics())
+            .add(render())
+            .add(VehicleComponent())
 
-    val body = physics()
-
-    e.add(PhysicsComponent(body))
-    e.add(render())
-    e.add(VehicleComponent())
+    if (driver != null)
+        e.add(driver)
 
     return e
 }

@@ -33,15 +33,49 @@ class VehicleSystem : IteratingSystem(
 
         val force = when (engineState) {
             EngineState.ACCELERATE -> ACCELERATION
-            EngineState.REVERSE -> REVERSE
+            EngineState.REVERSE -> -REVERSE
             EngineState.BRAKE -> if (currentSpeed > 0) -BRAKE else BRAKE
             else -> 0
         }
         val scl = forwards.scl(force.toFloat())
-        println(currentSpeed)
         body.applyForceToCenter(scl, true)
 
         // TODO rotation
 
+    }
+}
+
+class PlayerDrivingSystem : IteratingSystem(
+        Family.all(VehicleComponent::class.java, InputComponent::class.java).get()
+) {
+    private val engineGetter = ComponentMapper.getFor(VehicleComponent::class.java)
+    private val inputGetter = ComponentMapper.getFor(InputComponent::class.java)
+
+    override fun processEntity(entity: Entity, deltaTime: Float) {
+        val engine = engineGetter.get(entity)
+        val input = inputGetter.get(entity)
+
+
+        val forwards = input.delta[InputSystem.DY]
+        val brake = input.delta[InputSystem.DBRAKE]
+
+        engine.engineState = when {
+            brake == 1 -> EngineState.BRAKE
+            forwards > 0 -> EngineState.ACCELERATE
+            forwards < 0 -> EngineState.REVERSE
+            else -> EngineState.DRIFT
+        }
+    }
+}
+
+class AIDrivingSystem : IteratingSystem(
+        Family.all(VehicleComponent::class.java, AIInputComponent::class.java).get()
+) {
+    private val engineGetter = ComponentMapper.getFor(VehicleComponent::class.java)
+    private val inputGetter = ComponentMapper.getFor(AIInputComponent::class.java)
+
+    override fun processEntity(entity: Entity, deltaTime: Float) {
+        val engine = engineGetter.get(entity)
+        val input = inputGetter.get(entity)
     }
 }
