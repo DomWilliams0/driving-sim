@@ -1,25 +1,37 @@
 package ms.domwillia.cars.view
 
+import com.badlogic.ashley.core.Engine
+import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.math.MathUtils
+import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.physics.box2d.BodyDef
 import ktx.app.KtxScreen
-
-const val PPM = 5F
-const val CAMERA_MOVE_SPEED = 1F
-const val CAMERA_ZOOM_SPEED = 0.05F
+import ktx.box2d.body
+import ktx.box2d.circle
+import ms.domwillia.cars.ecs.DummyRenderComponent
+import ms.domwillia.cars.ecs.PhysicsComponent
+import ms.domwillia.cars.ecs.PhysicsSystem
+import ms.domwillia.cars.ecs.RenderSystem
 
 class SimScreen : KtxScreen {
 
-    private var camera = OrthographicCamera()
     private val cameraInput = CameraInput()
-    private val renderer = ShapeRenderer()
+    private val engine = Engine().apply {
+        addSystem(PhysicsSystem())
+        addSystem(RenderSystem(cameraInput))
+
+        addEntity(Entity().apply {
+            val dummyBody = getSystem(PhysicsSystem::class.java).world.body(BodyDef.BodyType.DynamicBody)
+            dummyBody.circle(2F)
+            dummyBody.applyLinearImpulse(Vector2(2F, 2F), dummyBody.worldCenter, true)
+            add(PhysicsComponent(dummyBody))
+            add(DummyRenderComponent(Color.ORANGE))
+        })
+    }
 
     init {
         // TODO
@@ -40,24 +52,10 @@ class SimScreen : KtxScreen {
     }
 
     override fun render(delta: Float) {
-
-        camera.translate(cameraInput.getTranslation(CAMERA_MOVE_SPEED))
-        val zoom = cameraInput.getZoom(CAMERA_ZOOM_SPEED)
-        camera.zoom = MathUtils.clamp(camera.zoom + zoom, 0.1F, 4F)
-        camera.update()
-        renderer.projectionMatrix = camera.combined
-
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-        renderer.begin(ShapeRenderer.ShapeType.Line)
-        renderer.color = Color.ORANGE
-        renderer.rect(2F, 2F, 8F, 5F)
-        renderer.circle(0F, 0F, 10F, 20)
-        renderer.end()
+        engine.update(delta)
     }
 
     override fun resize(width: Int, height: Int) {
-        camera.viewportWidth = width / PPM
-        camera.viewportHeight = camera.viewportWidth * (height.toFloat() / width.toFloat())
-        camera.update()
+        engine.getSystem(RenderSystem::class.java).resize(width, height)
     }
 }
