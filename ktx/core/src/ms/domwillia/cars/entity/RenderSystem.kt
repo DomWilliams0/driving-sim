@@ -13,9 +13,9 @@ import com.badlogic.gdx.math.MathUtils
 import ms.domwillia.cars.view.CameraInput
 import ms.domwillia.cars.world.World
 
-const val PPM = 5F
+const val PPM = 8F
 const val CAMERA_MOVE_SPEED = 1F
-const val CAMERA_ZOOM_SPEED = 0.05F
+const val CAMERA_ZOOM_SPEED = 0.01F
 
 
 class RenderSystem(

@@ -8,23 +8,25 @@ import com.badlogic.gdx.math.Vector3
 import ktx.ashley.get
 import ms.domwillia.cars.entity.PhysicsComponent
 
-private const val DX = 0
-private const val DY = 1
-private const val DZOOM = 2
-
-private val movement = mapOf(
-        Input.Keys.LEFT to Pair(DX, -1),
-        Input.Keys.RIGHT to Pair(DX, 1),
-        Input.Keys.UP to Pair(DY, 1),
-        Input.Keys.DOWN to Pair(DY, -1),
-
-        Input.Keys.PLUS to Pair(DZOOM, -1),
-        Input.Keys.MINUS to Pair(DZOOM, 1)
-)
-
-private const val retrackKey = Input.Keys.CONTROL_LEFT
-
 class CameraInput : InputAdapter() {
+
+    companion object {
+        private const val DX = 0
+        private const val DY = 1
+        private const val DZOOM = 2
+
+        private val movement = mapOf(
+                Input.Keys.LEFT to Pair(DX, -1),
+                Input.Keys.RIGHT to Pair(DX, 1),
+                Input.Keys.UP to Pair(DY, 1),
+                Input.Keys.DOWN to Pair(DY, -1),
+
+                Input.Keys.PLUS to Pair(DZOOM, -1),
+                Input.Keys.MINUS to Pair(DZOOM, 1)
+        )
+
+        private const val retrackKey = Input.Keys.CONTROL_LEFT
+    }
 
     private val delta = IntArray(3)
 
