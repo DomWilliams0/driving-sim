@@ -26,10 +26,14 @@ class VehicleSystem : IteratingSystem(
 
         // forwards motion
         val forwards = body.getWorldVector(Vector2.Y)
-        val currentSpeed = Vector2(forwards).scl(forwards.dot(body.linearVelocity)).dot(forwards)
-
-        if (currentSpeed < STOPPED_EPSILON_SQRD)
-            body.linearVelocity.setZero()
+        val currentSpeed = let {
+            var speed = Vector2(forwards).scl(forwards.dot(body.linearVelocity)).dot(forwards)
+            if (speed < STOPPED_EPSILON_SQRD) {
+                body.linearVelocity.setZero()
+                speed = 0F
+            }
+            speed
+        }
 
         val force = when (engineState) {
             EngineState.ACCELERATE -> ACCELERATION
@@ -41,9 +45,10 @@ class VehicleSystem : IteratingSystem(
         body.applyForceToCenter(scl, true)
 
         // TODO rotation
-
     }
+
 }
+
 
 class PlayerDrivingSystem : IteratingSystem(
         Family.all(VehicleComponent::class.java, InputComponent::class.java).get()
@@ -77,5 +82,8 @@ class AIDrivingSystem : IteratingSystem(
     override fun processEntity(entity: Entity, deltaTime: Float) {
         val engine = engineGetter.get(entity)
         val input = inputGetter.get(entity)
+
+        input.dummy = (input.dummy + 1) % 50
+        engine.engineState = if (input.dummy < 20) EngineState.ACCELERATE else EngineState.BRAKE
     }
 }

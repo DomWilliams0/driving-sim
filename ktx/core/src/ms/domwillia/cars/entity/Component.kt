@@ -28,7 +28,7 @@ data class RenderComponent(val colour: Color, val dimensions: Vector2) : Compone
 
 data class VehicleComponent(var engineState: EngineState = EngineState.DRIFT) : Component
 
-data class AIInputComponent(val dummy: Int) : Component
+data class AIInputComponent(var dummy: Int) : Component
 
 data class InputComponent(val delta: IntArray = IntArray(InputSystem.DELTA_COUNT)) : Component
 
