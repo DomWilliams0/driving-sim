@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 import kotlin.math.absoluteValue
 import kotlin.math.ln
@@ -21,12 +22,24 @@ class VehicleSystem : IteratingSystem(
 
     private val engineGetter = ComponentMapper.getFor(VehicleComponent::class.java)
     private val physicsGetter = ComponentMapper.getFor(PhysicsComponent::class.java)
+    private val renderGetter = ComponentMapper.getFor(RenderComponent::class.java)
 
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
+
         val body = physicsGetter.get(entity).body
         val engine = engineGetter.get(entity)
         val engineState = engine.engineState
+
+        // update render colour
+        renderGetter.get(entity)?.let {
+            it.colour = when (engineState) {
+                EngineState.DRIFT -> Color.GRAY
+                EngineState.ACCELERATE -> Color.GREEN
+                EngineState.BRAKE -> Color.RED
+                EngineState.REVERSE -> Color.WHITE
+            }
+        }
 
         // kill lateral motion
         val sideways = body.getWorldVector(Vector2.X)

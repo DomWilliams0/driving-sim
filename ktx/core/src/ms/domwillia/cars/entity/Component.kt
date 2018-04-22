@@ -24,7 +24,7 @@ enum class EngineState {
 }
 
 
-data class RenderComponent(val colour: Color, val dimensions: Vector2) : Component
+data class RenderComponent(var colour: Color, val dimensions: Vector2) : Component
 
 data class VehicleComponent(var engineState: EngineState = EngineState.DRIFT, var wheelsForce: Int = 0) : Component
 
