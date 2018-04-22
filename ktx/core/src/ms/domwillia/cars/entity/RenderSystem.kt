@@ -1,4 +1,4 @@
-package ms.domwillia.cars.ecs
+package ms.domwillia.cars.entity
 
 import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity

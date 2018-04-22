@@ -7,10 +7,10 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.OrthographicCamera
 import ktx.app.KtxScreen
-import ms.domwillia.cars.ecs.PhysicsDebugSystem
-import ms.domwillia.cars.ecs.PhysicsSystem
-import ms.domwillia.cars.ecs.RenderSystem
-import ms.domwillia.cars.ecs.createVehicleEntity
+import ms.domwillia.cars.entity.PhysicsDebugSystem
+import ms.domwillia.cars.entity.PhysicsSystem
+import ms.domwillia.cars.entity.RenderSystem
+import ms.domwillia.cars.entity.createVehicleEntity
 import ms.domwillia.cars.world.World
 
 class SimScreen(world: World) : KtxScreen {
