@@ -1,19 +1,16 @@
 package ms.domwillia.cars.view
 
 import com.badlogic.ashley.core.Engine
-import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.physics.box2d.BodyDef
 import ktx.app.KtxScreen
-import ktx.box2d.body
-import ktx.box2d.circle
-import ms.domwillia.cars.ecs.*
+import ms.domwillia.cars.ecs.PhysicsDebugSystem
+import ms.domwillia.cars.ecs.PhysicsSystem
+import ms.domwillia.cars.ecs.RenderSystem
+import ms.domwillia.cars.ecs.createVehicleEntity
 import ms.domwillia.cars.world.World
 
 class SimScreen(world: World) : KtxScreen {
@@ -25,13 +22,7 @@ class SimScreen(world: World) : KtxScreen {
         addSystem(PhysicsSystem(world.physics))
         addSystem(RenderSystem(world, camera, cameraInput))
 
-        addEntity(Entity().apply {
-            val dummyBody = world.physics.body(BodyDef.BodyType.DynamicBody)
-            dummyBody.circle(2F)
-            dummyBody.applyLinearImpulse(Vector2(2F, 2F), dummyBody.worldCenter, true)
-            add(PhysicsComponent(dummyBody))
-            add(DummyRenderComponent(Color.ORANGE))
-        })
+        addEntity(createVehicleEntity(world.physics))
     }
 
     private val debugRender = PhysicsDebugSystem(world, camera)

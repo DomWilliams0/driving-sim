@@ -5,7 +5,6 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
@@ -24,10 +23,10 @@ class RenderSystem(
         private val camera: OrthographicCamera,
         private val cameraInput: CameraInput
 ) : IteratingSystem(
-        Family.all(PhysicsComponent::class.java, DummyRenderComponent::class.java).get()
+        Family.all(PhysicsComponent::class.java, RenderComponent::class.java).get()
 ) {
-    private val physics = ComponentMapper.getFor(PhysicsComponent::class.java)
-    private val render = ComponentMapper.getFor(DummyRenderComponent::class.java)
+    private val physicsGetter = ComponentMapper.getFor(PhysicsComponent::class.java)
+    private val renderGetter = ComponentMapper.getFor(RenderComponent::class.java)
     private val renderer = ShapeRenderer()
 
 //    private val renderQueue = gdxArrayOf<Entity>(ordered = false)
@@ -46,18 +45,20 @@ class RenderSystem(
         renderer.color = Color.DARK_GRAY
         val roadWidth = 10F
         for (edge in world.roadGraph.edgeSet()) renderer.rectLine(edge.src, edge.dst, roadWidth)
-        for (v in world.roadGraph.vertexSet()) renderer.circle(v.x, v.y, roadWidth / 2)
-        renderer.end()
+        for (v in world.roadGraph.vertexSet()) renderer.circle(v.x, v.y, roadWidth / 2, 25)
 
-        renderer.begin(ShapeRenderer.ShapeType.Line)
+        // entities
         super.update(deltaTime)
         renderer.end()
     }
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
-        val pos = physics.get(entity).body.position
-        renderer.color = render.get(entity).colour
-        renderer.circle(pos.x, pos.y, 2F, 30)
+        val pos = physicsGetter.get(entity).body.position
+        val ren = renderGetter.get(entity)
+        renderer.color = ren.colour
+        renderer.rect(
+                pos.x - ren.dimensions.x / 2, pos.y - ren.dimensions.y / 2,
+                ren.dimensions.x, ren.dimensions.y)
     }
 
     fun resize(width: Int, height: Int) {
