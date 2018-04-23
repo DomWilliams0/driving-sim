@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Body
 import com.badlogic.gdx.physics.box2d.BodyDef
-import com.badlogic.gdx.physics.box2d.PolygonShape
 import com.badlogic.gdx.physics.box2d.World
 import ktx.box2d.body
 
@@ -40,15 +39,27 @@ fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null)
                 linearDamping = 0.1F
                 position.set(pos)
 
-                let {
-                    val chassisShape = PolygonShape().apply {
-                        setAsBox(VEHICLE_HALF_DIMENSIONS.x, VEHICLE_HALF_DIMENSIONS.y)
-                    }
-                    val fix = fixture(chassisShape)
-                    fix.density = 16F
-                    fix.friction = 0.5F
+                // chassis
+                box(VEHICLE_DIMENSIONS.x, VEHICLE_DIMENSIONS.y) {
+                    density = 16F
+                    friction = 0.5F
                 }
-                // TODO detector and sight
+
+                // detector
+                circle(radius = 0.1F) {
+                    isSensor = true
+                }
+
+                // sight
+                val sightDistance = VEHICLE_HALF_DIMENSIONS.y * 4 // TODO vary with speed?
+                val widthMod = 1.5F
+                val sightWidth = VEHICLE_DIMENSIONS.x * widthMod / 2F
+                polygon(Vector2(-sightWidth, 0F),
+                        Vector2(-sightWidth, sightDistance),
+                        Vector2(sightWidth, sightDistance),
+                        Vector2(sightWidth, 0F)) {
+                    isSensor = true
+                }
             })
 
     fun render(): Component {
