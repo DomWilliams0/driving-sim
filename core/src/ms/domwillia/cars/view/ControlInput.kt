@@ -44,11 +44,11 @@ class ControlInput(
 
     override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
 
-        // true = control
-        // false = follow
+        val controlFlag = 1
+        val followFlag = 2
         val control = when {
-            button == Input.Buttons.LEFT && controllingEntity == null -> true
-            button == Input.Buttons.RIGHT -> false
+            button == Input.Buttons.LEFT && controllingEntity == null -> controlFlag.or(followFlag)
+            button == Input.Buttons.RIGHT -> followFlag
             else -> return false
         }
 
@@ -65,10 +65,8 @@ class ControlInput(
             false // stop query
         }
         targetEntity?.let { e ->
-            when (control) {
-                true -> controlEntity(e)
-                false -> cameraInput.follow(e)
-            }
+            if (control.and(controlFlag) != 0) controlEntity(e)
+            if (control.and(followFlag) != 0) cameraInput.follow(e)
             return true
         }
 
