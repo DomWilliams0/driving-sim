@@ -27,7 +27,8 @@ class VehicleSystem : IteratingSystem(
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
 
-        val body = physicsGetter.get(entity).body
+        val physics = physicsGetter.get(entity)
+        val body = physics.body
         val engine = engineGetter.get(entity)
         val engineState = engine.engineState
 
@@ -70,8 +71,8 @@ class VehicleSystem : IteratingSystem(
         body.applyForceToCenter(scl, true)
 
         // rotation
-        if (engine.wheelsForce == 0)
-            body.angularVelocity = 0F
+        val angular = if (engine.wheelsForce == 0)
+            0F
         else {
             // rises quickly and plateaus until ~34, then gradually reduces
             var mult: Float = if (currentAbs < 34.135) // where these 2 lines intersect
@@ -80,8 +81,13 @@ class VehicleSystem : IteratingSystem(
                 (1F / (0.01F * currentAbs) + 0.3F) + 2
 
             mult = Math.copySign(mult, currentSpeed)
-            body.angularVelocity = engine.wheelsForce * mult * -0.5F
+            engine.wheelsForce * mult * -0.5F
         }
+        body.angularVelocity = angular
+
+        physics.speed = currentSpeed
+        if (angular != 0F)
+            physics.turningRate = -angular
     }
 
 }

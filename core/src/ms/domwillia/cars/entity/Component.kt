@@ -35,7 +35,12 @@ data class AIInputComponent(var dummy: Int) : Component
 
 data class InputComponent(val delta: IntArray = IntArray(InputSystem.DELTA_COUNT)) : Component
 
-data class PhysicsComponent(val body: Body) : Component
+data class PhysicsComponent(
+        val body: Body,
+
+        var turningRate: Float = 0F,
+        var speed: Float = 0F
+) : Component
 
 fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null): Entity {
     fun physics(veh: VehicleComponent): Component =

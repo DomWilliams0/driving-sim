@@ -3,8 +3,8 @@ package ms.domwillia.cars.entity
 import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.gdx.physics.box2d.World
 
-private const val TPS = 50
-private const val TIMESTEP = 1F / TPS
+internal const val TPS = 50
+internal const val TIMESTEP = 1F / TPS
 
 
 class PhysicsSystem(val world: World) : EntitySystem() {
