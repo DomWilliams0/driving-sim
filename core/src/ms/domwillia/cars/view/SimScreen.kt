@@ -28,6 +28,7 @@ class SimScreen(world: World) : KtxScreen {
 
         createVehicleEntity(world.physics, Vector2(1F, 2F)).let {
             controlInput.controlEntity(it)
+            cameraInput.follow(it)
             addEntity(it)
         }
         addEntity(createVehicleEntity(world.physics, Vector2(3F, 2F), AIInputComponent()))
