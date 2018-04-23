@@ -1,6 +1,5 @@
 package ms.domwillia.cars.world
 
-import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver
 import com.badlogic.gdx.maps.objects.PolygonMapObject
 import com.badlogic.gdx.maps.objects.PolylineMapObject
@@ -11,10 +10,7 @@ import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import ktx.box2d.body
 import ktx.box2d.filter
-import ktx.box2d.fixture
-import ktx.collections.*
 import ms.domwillia.cars.entity.VEHICLE_DIMENSIONS
-import ms.domwillia.cars.entity.VehicleComponent
 import org.jgrapht.graph.DirectedPseudograph
 import com.badlogic.gdx.physics.box2d.World as PhysicsWorld
 
@@ -27,7 +23,17 @@ data class RoadNode(val pos: Vector2, var maxLanes: Int = 1) {
     }
 }
 
-data class RoadEdge(val id: Int, val src: Vector2, val dst: Vector2, val lanes: Int)
+data class RoadEdge(val id: Int, val src: Vector2, val dst: Vector2, val lanes: Int) {
+    var length: Float = Float.NaN // to be set below
+    var width: Float = lanes * LANE_WIDTH
+
+    val direction: Vector2 = run {
+        val dir = dst.cpy().sub(src)
+        length = dir.len()
+        dir.nor()
+    }
+    val centre: Vector2 = src.cpy().add(direction.x * length / 2F, direction.y * length / 2F)
+}
 
 class World(path: String) {
     val physics = PhysicsWorld(Vector2.Zero, true).apply {
@@ -38,7 +44,7 @@ class World(path: String) {
 
     val roadGraph = DirectedPseudograph<RoadNode, RoadEdge>(
             { src, dst ->
-                val lanes = 2
+                val lanes = 3
                 src.updateLanes(lanes)
                 dst.updateLanes(lanes)
                 RoadEdge(nextEdgeId++, src.pos, dst.pos, lanes)
@@ -93,7 +99,7 @@ class World(path: String) {
         for (edge in roadGraph.edgeSet()) {
             val (x1, y1) = edge.src
             val (x2, y2) = edge.dst
-            val width = LANE_WIDTH * edge.lanes / 2F
+            val width = edge.width / 2F
 
             tmp.set(y2 - y1, x1 - x2).nor()
             val tx = tmp.x * width

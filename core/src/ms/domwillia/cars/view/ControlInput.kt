@@ -24,16 +24,18 @@ class ControlInput(
     }
 
     private var controllingEntity: Entity? = null
+    private var backupAI: AIInputComponent? = null
 
 
     fun controlEntity(entity: Entity?) {
         when {
             entity == null -> controllingEntity?.run {
                 remove(InputComponent::class.java)
-                add(AIInputComponent()) // TODO cache somehow? need to give back original behaviour
+                add(backupAI ?: AIInputComponent())
+                backupAI = null
             }
             controllingEntity == null -> {
-                entity.remove(AIInputComponent::class.java) // TODO store brain
+                backupAI = entity.remove(AIInputComponent::class.java) as AIInputComponent?
                 entity.add(InputComponent())
             }
             else -> return

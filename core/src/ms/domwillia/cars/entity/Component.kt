@@ -33,10 +33,14 @@ enum class EngineState {
 data class RenderComponent(var colour: Color, val dimensions: Vector2) : Component
 
 data class VehicleComponent(var engineState: EngineState = EngineState.DRIFT, var wheelsForce: Int = 0) : Component {
-    val currentRoadStack = gdxListOf<RoadEdge>() // linked list, shouldnt be more than a few elements at a time
+    val currentRoadStack = linkedSetOf<RoadEdge>()
 
     val currentRoad: RoadEdge?
-        get() = currentRoadStack.run { if (isNotEmpty) last else null }
+        get() = currentRoadStack.lastOrNull()
+
+    var currentLane: Int = 0
+
+    fun getCurrentState() = currentRoad?.let { "Road ${it.id} lane $currentLane" } ?: "No current road"
 }
 
 data class AIInputComponent(var currentRoadDirection: Vector2? = null) : Component

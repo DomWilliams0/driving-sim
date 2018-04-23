@@ -62,8 +62,8 @@ class RenderSystem(
 
         spriteBatch.begin()
         entities.asSequence()
-                .filter(inputGetter::has)
-                .forEach(::processText)
+                .find(inputGetter::has)
+                ?.let(this::processText)
         spriteBatch.end()
     }
 
@@ -87,7 +87,7 @@ class RenderSystem(
         val veh = vehicleGetter.get(entity)
         renderer.color = Color.WHITE
 
-        font.draw(spriteBatch, veh.currentRoad.toString(), 20F, 20F)
+        font.draw(spriteBatch, veh.getCurrentState(), 20F, 20F)
     }
 
     fun resize(width: Int, height: Int) {

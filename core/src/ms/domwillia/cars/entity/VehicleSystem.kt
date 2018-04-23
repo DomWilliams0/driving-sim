@@ -4,8 +4,11 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.math.Matrix3
 import com.badlogic.gdx.math.Vector2
+import ktx.ashley.has
 import kotlin.math.absoluteValue
+import kotlin.math.floor
 import kotlin.math.ln
 
 class VehicleSystem : IteratingSystem(
@@ -82,6 +85,26 @@ class VehicleSystem : IteratingSystem(
         physics.speed = currentSpeed
         if (angular != 0F)
             physics.turningRate = -angular
+
+        // calculate lane
+        vehicle.currentRoad?.let { road ->
+            val pos = body.position
+            val rotateMatrix = Matrix3()
+
+            rotateMatrix
+                    .rotate(90 - road.direction.angle())
+                    .translate(-road.centre.x, -road.centre.y)
+
+            val rotatedPos = pos.cpy().mul(rotateMatrix).apply {
+                x = (x + road.width / 2F) / road.width
+                y = (y + road.length / 2F) / road.length
+            }
+            // x is distance across the lanes
+            // y is distance along the segment
+
+            val lane = floor(rotatedPos.x * road.lanes).toInt()
+            vehicle.currentLane = lane
+        }
     }
 
 }
@@ -117,5 +140,9 @@ class AIDrivingSystem : IteratingSystem(
         val vehicle = vehicleGetter.get(entity)
         val ai = aiGetter.get(entity)
 
+        val road = vehicle.currentRoad ?: return
+
+        // TODO change to this direction
+        ai.currentRoadDirection = road.direction
     }
 }
