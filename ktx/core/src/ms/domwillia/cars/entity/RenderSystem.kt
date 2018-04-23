@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.MathUtils
 import ms.domwillia.cars.view.CameraInput
+import ms.domwillia.cars.world.LANE_WIDTH
 import ms.domwillia.cars.world.World
 
 const val PPM = 8F
@@ -46,9 +47,8 @@ class RenderSystem(
         renderer.begin(ShapeRenderer.ShapeType.Filled)
         renderer.identity()
         renderer.color = Color.DARK_GRAY
-        val roadWidth = 10F
-        for (edge in world.roadGraph.edgeSet()) renderer.rectLine(edge.src, edge.dst, roadWidth)
-        for (v in world.roadGraph.vertexSet()) renderer.circle(v.x, v.y, roadWidth / 2, 25)
+        for (edge in world.roadGraph.edgeSet()) renderer.rectLine(edge.src, edge.dst, edge.lanes * LANE_WIDTH)
+        for (v in world.roadGraph.vertexSet()) renderer.circle(v.pos.x, v.pos.y, v.maxLanes * LANE_WIDTH / 2, 25)
 
         // entities
         super.update(deltaTime)
