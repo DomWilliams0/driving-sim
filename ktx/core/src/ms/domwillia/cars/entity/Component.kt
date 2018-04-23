@@ -8,6 +8,10 @@ import com.badlogic.gdx.physics.box2d.Body
 import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.World
 import ktx.box2d.body
+import ktx.box2d.filter
+import ms.domwillia.cars.world.CollisionFlag
+import ms.domwillia.cars.world.VehicleDetectorData
+import ms.domwillia.cars.world.VehicleSightData
 
 const val VEHICLE_WIDTH = 1.8F
 const val VEHICLE_HEIGHT = 4.2F
@@ -34,7 +38,7 @@ data class InputComponent(val delta: IntArray = IntArray(InputSystem.DELTA_COUNT
 data class PhysicsComponent(val body: Body) : Component
 
 fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null): Entity {
-    fun physics(): Component =
+    fun physics(veh: VehicleComponent): Component =
             PhysicsComponent(physics.body(BodyDef.BodyType.DynamicBody) {
                 linearDamping = 0.1F
                 position.set(pos)
@@ -48,6 +52,12 @@ fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null)
                 // detector
                 circle(radius = 0.1F) {
                     isSensor = true
+                    userData = VehicleDetectorData(veh)
+                    filter {
+                        categoryBits = CollisionFlag.VEHICLE_DETECTOR.flag
+                        maskBits = CollisionFlag.ROAD.flag
+
+                    }
                 }
 
                 // sight
@@ -59,6 +69,11 @@ fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null)
                         Vector2(sightWidth, sightDistance),
                         Vector2(sightWidth, 0F)) {
                     isSensor = true
+                    userData = VehicleSightData(veh)
+                    filter {
+                        categoryBits = CollisionFlag.VEHICLE_SIGHT.flag
+                        maskBits = 0
+                    }
                 }
             })
 
@@ -69,10 +84,11 @@ fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null)
     }
 
 
+    val veh = VehicleComponent()
     val e = Entity()
-            .add(physics())
+            .add(physics(veh))
             .add(render())
-            .add(VehicleComponent())
+            .add(veh)
 
     if (driver != null)
         e.add(driver)

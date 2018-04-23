@@ -9,6 +9,8 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import ktx.box2d.body
+import ktx.box2d.filter
+import ktx.box2d.fixture
 import ms.domwillia.cars.entity.VEHICLE_DIMENSIONS
 import org.jgrapht.graph.DirectedPseudograph
 import com.badlogic.gdx.physics.box2d.World as PhysicsWorld
@@ -25,7 +27,9 @@ data class RoadNode(val pos: Vector2, var maxLanes: Int = 1) {
 data class RoadEdge(val id: Int, val src: Vector2, val dst: Vector2, val lanes: Int)
 
 class World(path: String) {
-    val physics = PhysicsWorld(Vector2.Zero, true)
+    val physics = PhysicsWorld(Vector2.Zero, true).apply {
+        setContactListener(PhysicsCollisionHandler())
+    }
 
     private var nextEdgeId = 1
 
@@ -75,6 +79,10 @@ class World(path: String) {
         val fixDef = FixtureDef().apply {
             shape = polygon
             isSensor = true
+            filter {
+                categoryBits = CollisionFlag.ROAD.flag
+                maskBits = CollisionFlag.VEHICLE_DETECTOR.flag
+            }
         }
 
         val vertices = FloatArray(16)
@@ -107,7 +115,7 @@ class World(path: String) {
             vertices[15] = y1 - ty
             polygon.set(vertices)
 
-            val fix = staticFrame.createFixture(fixDef)
+            staticFrame.createFixture(fixDef).apply { userData = RoadData(edge) }
         }
     }
 
