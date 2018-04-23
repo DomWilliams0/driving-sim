@@ -34,7 +34,7 @@ class RenderSystem(
 
     override fun update(deltaTime: Float) {
 
-        camera.translate(cameraInput.getTranslation(camera.position, CAMERA_MOVE_SPEED))
+        camera.translate(cameraInput.getTranslation(CAMERA_MOVE_SPEED))
 
         val zoom = cameraInput.getZoom(CAMERA_ZOOM_SPEED)
         camera.zoom = MathUtils.clamp(camera.zoom + zoom, 0.1F, 4F)

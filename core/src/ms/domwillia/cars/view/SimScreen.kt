@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.FPSLogger
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector2
 import ktx.app.KtxScreen
@@ -15,8 +14,9 @@ import ms.domwillia.cars.world.World
 class SimScreen(world: World) : KtxScreen {
 
     private val camera = OrthographicCamera()
-    private val cameraInput = CameraInput()
+    private val cameraInput = CameraInput(camera)
     private val driverInput = PlayerDriveInput(InputSystem())
+    private val controlInput = ControlInput(camera, cameraInput, world.physics)
 
     private val engine = Engine().apply {
         addSystem(PhysicsSystem(world.physics))
@@ -26,9 +26,10 @@ class SimScreen(world: World) : KtxScreen {
         addSystem(driverInput.inputSystem)
         addSystem(RenderSystem(world, camera, cameraInput))
 
-        val player = createVehicleEntity(world.physics, Vector2(1F, 2F), InputComponent())
-        cameraInput.follow(player)
-        addEntity(player)
+        createVehicleEntity(world.physics, Vector2(1F, 2F)).let {
+            controlInput.controlEntity(it)
+            addEntity(it)
+        }
         addEntity(createVehicleEntity(world.physics, Vector2(3F, 2F), AIInputComponent(0)))
         addEntity(createVehicleEntity(world.physics, Vector2(5F, 2F)))
     }
@@ -48,6 +49,7 @@ class SimScreen(world: World) : KtxScreen {
     init {
         Gdx.input.inputProcessor = InputMultiplexer().apply {
             addProcessor(cameraInput)
+            addProcessor(controlInput)
             addProcessor(driverInput)
             addProcessor(object : InputAdapter() {
                 override fun keyDown(keycode: Int): Boolean = toggleDebugRender(keycode, true)

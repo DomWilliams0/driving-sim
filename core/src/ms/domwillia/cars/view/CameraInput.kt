@@ -3,12 +3,12 @@ package ms.domwillia.cars.view
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
+import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
 import ktx.ashley.get
 import ms.domwillia.cars.entity.PhysicsComponent
 
-class CameraInput : InputAdapter() {
+class CameraInput(private val camera: OrthographicCamera) : InputAdapter() {
 
     companion object {
         private const val DX = 0
@@ -35,6 +35,7 @@ class CameraInput : InputAdapter() {
 
     fun follow(entity: Entity) {
         entity.get<PhysicsComponent>()?.let { following = it }
+        actuallyFollow = true
     }
 
     private fun handleKey(keycode: Int, down: Boolean): Boolean {
@@ -56,7 +57,8 @@ class CameraInput : InputAdapter() {
         return true
     }
 
-    fun getTranslation(current: Vector3, speed: Float): Vector2 = if (actuallyFollow && following != null) {
+    fun getTranslation(speed: Float): Vector2 = if (actuallyFollow && following != null) {
+        val current = camera.position
         following!!.body.position.cpy().sub(current.x, current.y)
     } else {
         Vector2(delta[0] * speed, delta[1] * speed)

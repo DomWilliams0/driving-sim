@@ -43,7 +43,7 @@ data class PhysicsComponent(
 ) : Component
 
 fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null): Entity {
-    fun physics(veh: VehicleComponent): Component =
+    fun physics(e: Entity, veh: VehicleComponent): Component =
             PhysicsComponent(physics.body(BodyDef.BodyType.DynamicBody) {
                 linearDamping = 0.1F
                 position.set(pos)
@@ -57,7 +57,7 @@ fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null)
                 // detector
                 circle(radius = 0.1F) {
                     isSensor = true
-                    userData = VehicleDetectorData(veh)
+                    userData = VehicleDetectorData(veh, e)
                     filter {
                         categoryBits = CollisionFlag.VEHICLE_DETECTOR.flag
                         maskBits = CollisionFlag.ROAD.flag
@@ -91,7 +91,7 @@ fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null)
 
     val veh = VehicleComponent()
     val e = Entity()
-            .add(physics(veh))
+            e.add(physics(e, veh))
             .add(render())
             .add(veh)
 

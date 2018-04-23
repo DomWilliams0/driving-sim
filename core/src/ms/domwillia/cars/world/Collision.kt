@@ -1,5 +1,6 @@
 package ms.domwillia.cars.world
 
+import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.physics.box2d.Contact
 import com.badlogic.gdx.physics.box2d.ContactImpulse
 import com.badlogic.gdx.physics.box2d.ContactListener
@@ -20,7 +21,7 @@ sealed class UserData(val type: CollisionFlag) {
 }
 
 data class RoadData(val road: RoadEdge) : UserData(CollisionFlag.ROAD)
-data class VehicleDetectorData(val vehicle: VehicleComponent) : UserData(CollisionFlag.VEHICLE_DETECTOR)
+data class VehicleDetectorData(val vehicle: VehicleComponent, val entity: Entity) : UserData(CollisionFlag.VEHICLE_DETECTOR)
 data class VehicleSightData(val vehicle: VehicleComponent) : UserData(CollisionFlag.VEHICLE_SIGHT)
 
 
