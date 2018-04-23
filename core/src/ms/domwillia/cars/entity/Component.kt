@@ -10,7 +10,9 @@ import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.World
 import ktx.box2d.body
 import ktx.box2d.filter
+import ktx.collections.*
 import ms.domwillia.cars.world.CollisionFlag
+import ms.domwillia.cars.world.RoadEdge
 import ms.domwillia.cars.world.VehicleDetectorData
 import ms.domwillia.cars.world.VehicleSightData
 
@@ -30,9 +32,14 @@ enum class EngineState {
 
 data class RenderComponent(var colour: Color, val dimensions: Vector2) : Component
 
-data class VehicleComponent(var engineState: EngineState = EngineState.DRIFT, var wheelsForce: Int = 0) : Component
+data class VehicleComponent(var engineState: EngineState = EngineState.DRIFT, var wheelsForce: Int = 0) : Component {
+    val currentRoadStack = gdxListOf<RoadEdge>() // linked list, shouldnt be more than a few elements at a time
 
-data class AIInputComponent(var dummy: Int) : Component
+    val currentRoad: RoadEdge?
+        get() = currentRoadStack.run { if (isNotEmpty) last else null }
+}
+
+data class AIInputComponent(var currentRoadDirection: Vector2? = null) : Component
 
 data class InputComponent(val delta: IntArray = IntArray(InputSystem.DELTA_COUNT)) : Component
 

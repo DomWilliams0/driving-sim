@@ -30,7 +30,7 @@ class SimScreen(world: World) : KtxScreen {
             controlInput.controlEntity(it)
             addEntity(it)
         }
-        addEntity(createVehicleEntity(world.physics, Vector2(3F, 2F), AIInputComponent(0)))
+        addEntity(createVehicleEntity(world.physics, Vector2(3F, 2F), AIInputComponent()))
         addEntity(createVehicleEntity(world.physics, Vector2(5F, 2F)))
     }
 

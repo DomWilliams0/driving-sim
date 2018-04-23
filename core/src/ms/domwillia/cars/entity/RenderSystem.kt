@@ -7,8 +7,11 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.g2d.BitmapFont
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.MathUtils
+import com.badlogic.gdx.math.Matrix4
 import ms.domwillia.cars.view.CameraInput
 import ms.domwillia.cars.world.LANE_WIDTH
 import ms.domwillia.cars.world.World
@@ -26,9 +29,10 @@ class RenderSystem(
         Family.all(PhysicsComponent::class.java, RenderComponent::class.java).get()
 ) {
     private val renderer = ShapeRenderer()
+    private val spriteBatch = SpriteBatch()
+    private val font = BitmapFont()
 
-//    private val renderQueue = gdxArrayOf<Entity>(ordered = false)
-
+    private val tmpMatrix = Matrix4()
     override fun update(deltaTime: Float) {
 
         camera.translate(cameraInput.getTranslation(CAMERA_MOVE_SPEED))
@@ -50,6 +54,17 @@ class RenderSystem(
         // entities
         super.update(deltaTime)
         renderer.end()
+
+        // ui-like things
+        val proj = tmpMatrix.set(camera.combined)
+        proj.setToOrtho2D(0F, 0F, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
+        spriteBatch.projectionMatrix = proj
+
+        spriteBatch.begin()
+        entities.asSequence()
+                .filter(inputGetter::has)
+                .forEach(::processText)
+        spriteBatch.end()
     }
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
@@ -65,6 +80,14 @@ class RenderSystem(
         renderer.rect(
                 -ren.dimensions.x / 2, -ren.dimensions.y / 2,
                 ren.dimensions.x, ren.dimensions.y)
+
+    }
+
+    private fun processText(entity: Entity) {
+        val veh = vehicleGetter.get(entity)
+        renderer.color = Color.WHITE
+
+        font.draw(spriteBatch, veh.currentRoad.toString(), 20F, 20F)
     }
 
     fun resize(width: Int, height: Int) {

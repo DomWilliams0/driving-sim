@@ -59,6 +59,10 @@ class PhysicsCollisionHandler : ContactListener {
 
 fun handleRoadAndCar(begin: Boolean, a: UserData, b: UserData) {
     val road = a as RoadData
-    val car = b as VehicleDetectorData
-    // TODO
+    val stack = (b as VehicleDetectorData).vehicle.currentRoadStack
+
+    if (begin)
+        stack.last = road.road
+    else
+        stack.removeLast()
 }

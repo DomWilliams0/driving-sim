@@ -1,5 +1,6 @@
 package ms.domwillia.cars.world
 
+import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver
 import com.badlogic.gdx.maps.objects.PolygonMapObject
 import com.badlogic.gdx.maps.objects.PolylineMapObject
@@ -11,7 +12,9 @@ import com.badlogic.gdx.physics.box2d.PolygonShape
 import ktx.box2d.body
 import ktx.box2d.filter
 import ktx.box2d.fixture
+import ktx.collections.*
 import ms.domwillia.cars.entity.VEHICLE_DIMENSIONS
+import ms.domwillia.cars.entity.VehicleComponent
 import org.jgrapht.graph.DirectedPseudograph
 import com.badlogic.gdx.physics.box2d.World as PhysicsWorld
 

@@ -112,11 +112,10 @@ class PlayerDrivingSystem : IteratingSystem(
 class AIDrivingSystem : IteratingSystem(
         Family.all(VehicleComponent::class.java, AIInputComponent::class.java).get()
 ) {
+
     override fun processEntity(entity: Entity, deltaTime: Float) {
         val vehicle = vehicleGetter.get(entity)
         val ai = aiGetter.get(entity)
 
-        ai.dummy = (ai.dummy + 1) % 50
-        vehicle.engineState = if (ai.dummy < 20) EngineState.ACCELERATE else EngineState.BRAKE
     }
 }

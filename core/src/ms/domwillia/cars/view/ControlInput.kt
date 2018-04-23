@@ -30,7 +30,7 @@ class ControlInput(
         when {
             entity == null -> controllingEntity?.run {
                 remove(InputComponent::class.java)
-                add(AIInputComponent(0)) // TODO cache somehow? need to give back original behaviour
+                add(AIInputComponent()) // TODO cache somehow? need to give back original behaviour
             }
             controllingEntity == null -> {
                 entity.remove(AIInputComponent::class.java) // TODO store brain
