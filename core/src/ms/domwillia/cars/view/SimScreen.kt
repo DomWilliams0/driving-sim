@@ -37,9 +37,9 @@ class SimScreen(world: World) : KtxScreen {
 
     private val debugRender = PhysicsDebugSystem(world, camera)
 
-    private fun toggleDebugRender(keycode: Int, debug: Boolean): Boolean {
+    private fun toggleDebugRender(keycode: Int): Boolean {
         return if (keycode == Input.Keys.J) {
-            if (debug)
+            if (engine.getSystem(PhysicsDebugSystem::class.java) == null)
                 engine.addSystem(debugRender)
             else
                 engine.removeSystem(debugRender)
@@ -53,8 +53,7 @@ class SimScreen(world: World) : KtxScreen {
             addProcessor(controlInput)
             addProcessor(driverInput)
             addProcessor(object : InputAdapter() {
-                override fun keyDown(keycode: Int): Boolean = toggleDebugRender(keycode, true)
-                override fun keyUp(keycode: Int): Boolean = toggleDebugRender(keycode, false)
+                override fun keyDown(keycode: Int): Boolean = toggleDebugRender(keycode)
             })
 
             addProcessor(object : InputAdapter() {
