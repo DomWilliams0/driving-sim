@@ -1,6 +1,7 @@
 package ms.domwillia.cars.entity
 
 import com.badlogic.ashley.core.Component
+import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
@@ -91,7 +92,7 @@ fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null)
 
     val veh = VehicleComponent()
     val e = Entity()
-            e.add(physics(e, veh))
+    e.add(physics(e, veh))
             .add(render())
             .add(veh)
 
@@ -100,3 +101,10 @@ fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null)
 
     return e
 }
+
+// helpers
+val renderGetter = ComponentMapper.getFor(RenderComponent::class.java)
+val aiGetter = ComponentMapper.getFor(AIInputComponent::class.java)
+val inputGetter = ComponentMapper.getFor(InputComponent::class.java)
+val physicsGetter = ComponentMapper.getFor(PhysicsComponent::class.java)
+val vehicleGetter = ComponentMapper.getFor(VehicleComponent::class.java)

@@ -1,6 +1,5 @@
 package ms.domwillia.cars.entity
 
-import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
@@ -14,7 +13,6 @@ class PhysicsDebugSystem(val world: World, val camera: Camera) : IteratingSystem
         Family.all(PhysicsComponent::class.java).get()
 ) {
 
-    private val physicsGetter = ComponentMapper.getFor(PhysicsComponent::class.java)
     private val physicsRenderer = Box2DDebugRenderer()
     private val shapeRenderer = ShapeRenderer()
 

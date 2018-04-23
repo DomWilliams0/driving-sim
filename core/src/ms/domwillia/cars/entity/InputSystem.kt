@@ -1,6 +1,5 @@
 package ms.domwillia.cars.entity
 
-import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
@@ -27,7 +26,6 @@ class InputSystem : IteratingSystem(
     }
 
     private val delta = IntArray(DELTA_COUNT)
-    private val inputGetter = ComponentMapper.getFor(InputComponent::class.java)
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
         val input = inputGetter.get(entity)

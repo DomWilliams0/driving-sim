@@ -1,6 +1,5 @@
 package ms.domwillia.cars.entity
 
-import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
@@ -20,17 +19,12 @@ class VehicleSystem : IteratingSystem(
     }
 
 
-    private val engineGetter = ComponentMapper.getFor(VehicleComponent::class.java)
-    private val physicsGetter = ComponentMapper.getFor(PhysicsComponent::class.java)
-    private val renderGetter = ComponentMapper.getFor(RenderComponent::class.java)
-
-
     override fun processEntity(entity: Entity, deltaTime: Float) {
 
         val physics = physicsGetter.get(entity)
         val body = physics.body
-        val engine = engineGetter.get(entity)
-        val engineState = engine.engineState
+        val vehicle = vehicleGetter.get(entity)
+        val engineState = vehicle.engineState
 
         // update render colour
         renderGetter.get(entity)?.let {
@@ -71,7 +65,7 @@ class VehicleSystem : IteratingSystem(
         body.applyForceToCenter(scl, true)
 
         // rotation
-        val angular = if (engine.wheelsForce == 0)
+        val angular = if (vehicle.wheelsForce == 0)
             0F
         else {
             // rises quickly and plateaus until ~34, then gradually reduces
@@ -81,7 +75,7 @@ class VehicleSystem : IteratingSystem(
                 (1F / (0.01F * currentAbs) + 0.3F) + 2
 
             mult = Math.copySign(mult, currentSpeed)
-            engine.wheelsForce * mult * -0.5F
+            vehicle.wheelsForce * mult * -0.5F
         }
         body.angularVelocity = angular
 
@@ -96,17 +90,14 @@ class VehicleSystem : IteratingSystem(
 class PlayerDrivingSystem : IteratingSystem(
         Family.all(VehicleComponent::class.java, InputComponent::class.java).get()
 ) {
-    private val engineGetter = ComponentMapper.getFor(VehicleComponent::class.java)
-    private val inputGetter = ComponentMapper.getFor(InputComponent::class.java)
-
     override fun processEntity(entity: Entity, deltaTime: Float) {
-        val engine = engineGetter.get(entity)
+        val vehicle = vehicleGetter.get(entity)
         val input = inputGetter.get(entity)
 
         val forwards = input.delta[InputSystem.DY]
         val brake = input.delta[InputSystem.DBRAKE]
 
-        engine.engineState = when {
+        vehicle.engineState = when {
             brake == 1 -> EngineState.BRAKE
             forwards > 0 -> EngineState.ACCELERATE
             forwards < 0 -> EngineState.REVERSE
@@ -114,21 +105,18 @@ class PlayerDrivingSystem : IteratingSystem(
         }
 
         val sideways = input.delta[InputSystem.DX]
-        engine.wheelsForce = sideways
+        vehicle.wheelsForce = sideways
     }
 }
 
 class AIDrivingSystem : IteratingSystem(
         Family.all(VehicleComponent::class.java, AIInputComponent::class.java).get()
 ) {
-    private val engineGetter = ComponentMapper.getFor(VehicleComponent::class.java)
-    private val inputGetter = ComponentMapper.getFor(AIInputComponent::class.java)
-
     override fun processEntity(entity: Entity, deltaTime: Float) {
-        val engine = engineGetter.get(entity)
-        val input = inputGetter.get(entity)
+        val vehicle = vehicleGetter.get(entity)
+        val ai = aiGetter.get(entity)
 
-        input.dummy = (input.dummy + 1) % 50
-        engine.engineState = if (input.dummy < 20) EngineState.ACCELERATE else EngineState.BRAKE
+        ai.dummy = (ai.dummy + 1) % 50
+        vehicle.engineState = if (ai.dummy < 20) EngineState.ACCELERATE else EngineState.BRAKE
     }
 }

@@ -1,6 +1,5 @@
 package ms.domwillia.cars.entity
 
-import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
@@ -26,8 +25,6 @@ class RenderSystem(
 ) : IteratingSystem(
         Family.all(PhysicsComponent::class.java, RenderComponent::class.java).get()
 ) {
-    private val physicsGetter = ComponentMapper.getFor(PhysicsComponent::class.java)
-    private val renderGetter = ComponentMapper.getFor(RenderComponent::class.java)
     private val renderer = ShapeRenderer()
 
 //    private val renderQueue = gdxArrayOf<Entity>(ordered = false)
