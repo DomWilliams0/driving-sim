@@ -5,22 +5,49 @@ import com.badlogic.gdx.maps.objects.PolygonMapObject
 import com.badlogic.gdx.maps.objects.PolylineMapObject
 import com.badlogic.gdx.maps.tiled.TiledMap
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import ktx.box2d.body
 import ktx.box2d.filter
 import ms.domwillia.cars.entity.VEHICLE_DIMENSIONS
-import org.jgrapht.graph.DirectedPseudograph
+import org.jgrapht.graph.Pseudograph
 import com.badlogic.gdx.physics.box2d.World as PhysicsWorld
 
 val LANE_WIDTH: Float = VEHICLE_DIMENSIONS.x * 3F
 
 // TODO maybe use a simple id for nodes/edges and lookup properties in a big map
-data class RoadNode(val pos: Vector2, var maxLanes: Int = 1) {
+class RoadNode(pos: Vector2, var maxLanes: Int = 1) {
+    private val x: Int = MathUtils.floor(pos.x)
+    private val y: Int = MathUtils.floor(pos.y)
+    private val posVec = Vector2()
+
+    val pos: Vector2
+        get() = posVec.set(x.toFloat(), y.toFloat())
+
     fun updateLanes(lanes: Int) {
         maxLanes = maxOf(lanes, maxLanes)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as RoadNode
+
+        if (x != other.x) return false
+        if (y != other.y) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = x
+        result = 31 * result + y
+        return result
+    }
+
 }
 
 data class RoadEdge(val id: Int, val src: Vector2, val dst: Vector2, val lanes: Int) {
