@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Matrix4
+import com.badlogic.gdx.math.Vector2
 import ms.domwillia.cars.view.CameraInput
 import ms.domwillia.cars.world.LANE_WIDTH
 import ms.domwillia.cars.world.World
@@ -51,8 +52,29 @@ class RenderSystem(
         for (edge in world.roadGraph.edgeSet()) renderer.rectLine(edge.src, edge.dst, edge.lanes * LANE_WIDTH)
         for (v in world.roadGraph.vertexSet()) renderer.circle(v.pos.x, v.pos.y, v.maxLanes * LANE_WIDTH / 2, 25)
 
+        for (edge in world.roadGraph.edgeSet()) {
+            val normal = Vector2(-edge.direction.y, edge.direction.x).scl(edge.width / 2F)
+            renderer.color = Color.GREEN
+            renderer.line(edge.src.cpy().add(normal), edge.dst.cpy().add(normal))
+            renderer.color = Color.RED
+            renderer.line(edge.src.cpy().sub(normal), edge.dst.cpy().sub(normal))
+        }
+
+        renderer.color = Color.YELLOW
+        for (v in world.roadGraph.vertexSet()) {
+            renderer.circle(v.pos.x, v.pos.y, (1 + world.roadGraph.degreeOf(v)).toFloat() * 2F, 35)
+        }
+
         // entities
         super.update(deltaTime)
+        renderer.end()
+
+        // world road borders
+        renderer.begin(ShapeRenderer.ShapeType.Line)
+        renderer.identity()
+        renderer.color = Color.BLUE
+        renderer.translate(0F, 0F, -0.5F)
+        for (edge in world.roadGraph.edgeSet()) renderer.rectLine(edge.src, edge.dst, edge.lanes * LANE_WIDTH)
         renderer.end()
 
         // ui-like things

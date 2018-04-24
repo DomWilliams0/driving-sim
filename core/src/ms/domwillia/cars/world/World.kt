@@ -5,10 +5,12 @@ import com.badlogic.gdx.maps.objects.PolygonMapObject
 import com.badlogic.gdx.maps.objects.PolylineMapObject
 import com.badlogic.gdx.maps.tiled.TiledMap
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
+import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
+import com.sun.javafx.geom.Point2D
 import ktx.box2d.body
 import ktx.box2d.filter
 import ms.domwillia.cars.entity.VEHICLE_DIMENSIONS
@@ -48,6 +50,11 @@ class RoadNode(pos: Vector2, var maxLanes: Int = 1) {
         return result
     }
 
+    override fun toString(): String {
+        return "RoadNode(x=$x, y=$y, maxLanes=$maxLanes)"
+    }
+
+
 }
 
 data class RoadEdge(val id: Int, val src: Vector2, val dst: Vector2, val lanes: Int) {
@@ -59,6 +66,7 @@ data class RoadEdge(val id: Int, val src: Vector2, val dst: Vector2, val lanes: 
         length = dir.len()
         dir.nor()
     }
+    // TODO is direction ever used as-is or always scaled to length?
     val centre: Vector2 = src.cpy().add(direction.x * length / 2F, direction.y * length / 2F)
 }
 
@@ -69,7 +77,7 @@ class World(path: String) {
 
     private var nextEdgeId = 1
 
-    val roadGraph = DirectedPseudograph<RoadNode, RoadEdge>(
+    val roadGraph = Pseudograph<RoadNode, RoadEdge>(
             { src, dst ->
                 val lanes = 3
                 src.updateLanes(lanes)
@@ -101,6 +109,7 @@ class World(path: String) {
             minY = minOf(minY, vs.asSequence().chunked(2).minBy { it[1] }!![1])
         })
 
+        // add nodes and edges
         iterateAllPoints(map) { v, c ->
             for (i in 0..v.lastIndex step 2) {
                 v[i] -= minX
@@ -109,7 +118,7 @@ class World(path: String) {
             parseEdges(v, c)
         }
 
-        // add road sensors
+        // add sensor frame
         val staticFrame = physics.body()
         val polygon = PolygonShape()
         val fixDef = FixtureDef().apply {
@@ -121,8 +130,57 @@ class World(path: String) {
             }
         }
 
-        val vertices = FloatArray(16)
+        // add supplementary nodes
         val tmp = Vector2()
+        val subdivide = mutableSetOf<Pair<RoadNode, RoadEdge>>()
+        for (e1 in roadGraph.edgeSet()) {
+            for (e2 in roadGraph.edgeSet()) {
+                if (e1.id <= e2.id) continue
+
+                // extend past the end by a little bit
+                // TODO my thats a lot of vector allocation here
+                val d1 = e1.direction.cpy().scl(LANE_WIDTH * e1.lanes)
+                val d2 = e2.direction.cpy().scl(LANE_WIDTH * e2.lanes)
+                if (!Intersector.intersectSegments(
+                                e1.src.cpy().sub(d1),
+                                e1.dst.cpy().add(d1),
+                                e2.src.cpy().sub(d2),
+                                e2.dst.cpy().add(d2),
+                                tmp
+                        )) continue
+
+                val newVertex = RoadNode(tmp)
+                roadGraph.addVertex(newVertex)
+
+                val vertexPos = newVertex.pos
+                val toleranceSqrd = 2
+                fun isClose(v: Vector2) = Point2D.distanceSq(v.x, v.y, vertexPos.x, vertexPos.y) <= toleranceSqrd
+
+                if (!isClose(e1.src) && !isClose(e1.dst))
+                    subdivide.add(Pair(newVertex, e1))
+
+                if (!isClose(e2.src) && !isClose(e2.dst))
+                    subdivide.add(Pair(newVertex, e2))
+
+            }
+        }
+
+        // subdivide split edges
+        for ((v, e) in subdivide) {
+            println("subdivide $e at $v")
+            roadGraph.removeEdge(e)
+            roadGraph.addEdge(RoadNode(e.src), v)
+            roadGraph.addEdge(v, RoadNode(e.dst))
+        }
+
+        // check for too short edges
+        for (error in roadGraph.edgeSet().filter { it.length < it.lanes * LANE_WIDTH }) {
+            roadGraph.removeEdge(error)
+            System.err.println("There is a road that is too short for its width! $error with length ${error.length}")
+        }
+
+
+        val vertices = FloatArray(16)
         for (edge in roadGraph.edgeSet()) {
             val (x1, y1) = edge.src
             val (x2, y2) = edge.dst
