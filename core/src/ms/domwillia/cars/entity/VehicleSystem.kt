@@ -4,9 +4,9 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Matrix3
 import com.badlogic.gdx.math.Vector2
-import ktx.ashley.has
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.ln
@@ -102,7 +102,7 @@ class VehicleSystem : IteratingSystem(
             // x is distance across the lanes
             // y is distance along the segment
 
-            val lane = floor(rotatedPos.x * road.lanes).toInt()
+            val lane = MathUtils.clamp(floor(rotatedPos.x * road.lanes).toInt(), 0, road.lanes - 1)
             vehicle.currentLane = lane
         }
     }
