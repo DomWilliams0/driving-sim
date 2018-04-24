@@ -67,6 +67,12 @@ project(":core") {
         ))
             compile "io.github.libktx:ktx-$module:$ktxVersion"
     }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
 }
 
 tasks.eclipse.doLast {
