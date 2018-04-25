@@ -28,10 +28,6 @@ class RoadNode(pos: Vector2, var maxLanes: Int = 1) {
     val pos: Vector2
         get() = posVec.set(x.toFloat(), y.toFloat())
 
-    fun updateLanes(lanes: Int) {
-        maxLanes = maxOf(lanes, maxLanes)
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -80,8 +76,6 @@ class World(path: String) {
     val roadGraph = Pseudograph<RoadNode, RoadEdge>(
             { src, dst ->
                 val lanes = 3
-                src.updateLanes(lanes)
-                dst.updateLanes(lanes)
                 RoadEdge(nextEdgeId++, src.pos, dst.pos, lanes)
             })
 
@@ -117,6 +111,9 @@ class World(path: String) {
             }
             parseEdges(v, c)
         }
+
+        if (roadGraph.edgeSet().isEmpty())
+            throw IllegalStateException("No roads!")
 
         // add sensor frame
         val staticFrame = physics.body()
@@ -171,7 +168,6 @@ class World(path: String) {
 
         // subdivide split edges
         for ((v, e) in subdivide) {
-            println("subdivide $e at $v")
             roadGraph.removeEdge(e)
             roadGraph.addEdge(RoadNode(e.src), v)
             roadGraph.addEdge(v, RoadNode(e.dst))
@@ -181,6 +177,17 @@ class World(path: String) {
         for (error in roadGraph.edgeSet().filter { it.length < it.lanes * LANE_WIDTH }) {
             roadGraph.removeEdge(error)
             System.err.println("There is a road that is too short for its width! $error with length ${error.length}")
+        }
+
+        // check for orphaned nodes
+        for (error in roadGraph.vertexSet().filter { roadGraph.degreeOf(it) == 0 }) {
+            roadGraph.removeVertex(error)
+            System.err.println("There is a node with no edges! $error")
+        }
+
+        // update max lanes of all vertices
+        for (v in roadGraph.vertexSet()) {
+            v.maxLanes = roadGraph.edgesOf(v).maxBy(RoadEdge::lanes)?.lanes ?: 0
         }
 
 
