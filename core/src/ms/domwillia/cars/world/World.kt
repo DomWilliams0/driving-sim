@@ -136,6 +136,10 @@ class World(path: String) {
         for (e1 in roadGraph.edgeSet()) {
             for (e2 in roadGraph.edgeSet()) {
                 if (e1.id <= e2.id) continue
+                if (e1.src == e2.src ||
+                        e1.src == e2.dst ||
+                        e1.dst == e2.src ||
+                        e1.dst == e2.dst) continue
 
                 // extend past the end by a little bit
                 // TODO my thats a lot of vector allocation here
