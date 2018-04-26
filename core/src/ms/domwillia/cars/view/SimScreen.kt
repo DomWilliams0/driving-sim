@@ -6,10 +6,12 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import ktx.app.KtxScreen
 import ms.domwillia.cars.entity.*
 import ms.domwillia.cars.world.World
+import kotlin.math.PI
 
 class SimScreen(world: World) : KtxScreen {
 
@@ -26,13 +28,20 @@ class SimScreen(world: World) : KtxScreen {
         addSystem(driverInput.inputSystem)
         addSystem(RenderSystem(world, camera, cameraInput))
 
-        createVehicleEntity(world.physics, Vector2(1F, 2F)).let {
+        fun findRandomCarSpawnPosition(): Pair<Vector2, Float> {
+            val edge = world.roadGraph.edgeSet().shuffled(MathUtils.random).first()!!
+            val pos = edge.direction.cpy().scl(MathUtils.random() * edge.length).add(edge.src).add(edge.laneDirection)
+            val angle = edge.direction.angleRad() + PI / 2F
+            return Pair(pos, angle.toFloat())
+        }
+
+
+        val (pos, angle) = findRandomCarSpawnPosition()
+        createVehicleEntity(world.physics, pos, angleRad = angle).let {
             controlInput.controlEntity(it)
             cameraInput.follow(it)
             addEntity(it)
         }
-        addEntity(createVehicleEntity(world.physics, Vector2(3F, 2F), AIInputComponent()))
-        addEntity(createVehicleEntity(world.physics, Vector2(5F, 2F)))
     }
 
     private val debugRender = PhysicsDebugSystem(world, camera)

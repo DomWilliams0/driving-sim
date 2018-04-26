@@ -54,11 +54,12 @@ data class PhysicsComponent(
         var speed: Float = 0F
 ) : Component
 
-fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null): Entity {
+fun createVehicleEntity(physics: World, pos: Vector2, driver: Component? = null, angleRad: Float = 0F): Entity {
     fun physics(e: Entity, veh: VehicleComponent): Component =
             PhysicsComponent(physics.body(BodyDef.BodyType.DynamicBody) {
                 linearDamping = 0.1F
                 position.set(pos)
+                this.angle = angleRad
 
                 // chassis
                 box(VEHICLE_DIMENSIONS.x, VEHICLE_DIMENSIONS.y) {
