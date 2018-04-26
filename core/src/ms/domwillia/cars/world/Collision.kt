@@ -10,8 +10,9 @@ import kotlin.experimental.or
 
 enum class CollisionFlag(val flag: Short) {
     ROAD(1.shl(0)),
-    VEHICLE_DETECTOR(1.shl(1)),
-    VEHICLE_SIGHT(1.shl(2));
+    INTERSECTION(1.shl(1)),
+    VEHICLE_DETECTOR(1.shl(2)),
+    VEHICLE_SIGHT(1.shl(3));
 
     fun combine(other: CollisionFlag) = flag.or(other.flag)
 }
@@ -21,6 +22,7 @@ sealed class UserData(val type: CollisionFlag) {
 }
 
 data class RoadData(val road: RoadEdge) : UserData(CollisionFlag.ROAD)
+data class IntersectionData(val node: RoadNode) : UserData(CollisionFlag.INTERSECTION)
 data class VehicleDetectorData(val vehicle: VehicleComponent, val entity: Entity) : UserData(CollisionFlag.VEHICLE_DETECTOR)
 data class VehicleSightData(val vehicle: VehicleComponent) : UserData(CollisionFlag.VEHICLE_SIGHT)
 
@@ -29,7 +31,8 @@ data class VehicleSightData(val vehicle: VehicleComponent) : UserData(CollisionF
 private typealias CollisionHandler = (begin: Boolean, a: UserData, b: UserData) -> Unit
 
 private val handlers = mapOf<Short, CollisionHandler>(
-        CollisionFlag.ROAD.combine(CollisionFlag.VEHICLE_DETECTOR) to ::handleRoadAndCar
+        CollisionFlag.ROAD.combine(CollisionFlag.VEHICLE_DETECTOR) to ::handleRoadAndCar,
+        CollisionFlag.INTERSECTION.combine(CollisionFlag.VEHICLE_DETECTOR) to ::handleIntersectionAndCar
 )
 
 
@@ -65,4 +68,15 @@ fun handleRoadAndCar(begin: Boolean, a: UserData, b: UserData) {
         stack.add(road)
     else
         stack.remove(road)
+}
+
+fun handleIntersectionAndCar(begin: Boolean, a: UserData, b: UserData) {
+    val intersection = (a as IntersectionData)
+    val vehicle = (b as VehicleDetectorData).vehicle
+
+    if (begin) {
+        vehicle.currentIntersection = intersection.node
+    } else {
+        vehicle.currentIntersection = null
+    }
 }

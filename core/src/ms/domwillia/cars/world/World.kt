@@ -8,6 +8,7 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import com.sun.javafx.geom.Point2D
@@ -249,6 +250,16 @@ class World(path: String) {
             polygon.set(vertices)
 
             staticFrame.createFixture(fixDef).apply { userData = RoadData(edge) }
+        }
+
+        for (v in roadGraph.vertexSet()) {
+            staticFrame.createFixture(FixtureDef().apply {
+                shape = CircleShape().apply {
+                    radius = v.maxLanes * 1.25F * LANE_WIDTH / 2F
+                    position = v.pos
+                }
+                isSensor = true
+            }).userData = IntersectionData(v)
         }
     }
 

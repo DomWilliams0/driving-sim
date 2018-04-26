@@ -10,11 +10,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.World
 import ktx.box2d.body
 import ktx.box2d.filter
-import ktx.collections.*
-import ms.domwillia.cars.world.CollisionFlag
-import ms.domwillia.cars.world.RoadEdge
-import ms.domwillia.cars.world.VehicleDetectorData
-import ms.domwillia.cars.world.VehicleSightData
+import ms.domwillia.cars.world.*
 
 const val VEHICLE_WIDTH = 1.8F
 const val VEHICLE_HEIGHT = 4.2F
@@ -34,13 +30,18 @@ data class RenderComponent(var colour: Color, val dimensions: Vector2) : Compone
 
 data class VehicleComponent(var engineState: EngineState = EngineState.DRIFT, var wheelsForce: Int = 0) : Component {
     val currentRoadStack = linkedSetOf<RoadEdge>()
+    var currentIntersection: RoadNode? = null
 
     val currentRoad: RoadEdge?
         get() = currentRoadStack.lastOrNull()
 
     var currentLane: Int = 0
 
-    fun getCurrentState() = currentRoad?.let { "Road ${it.id} lane $currentLane" } ?: "No current road"
+    fun getCurrentState() = when {
+        currentIntersection != null -> "Intersection $currentIntersection"
+        currentRoad != null -> "Road ${currentRoad!!.id} lane $currentLane"
+        else -> "No current road"
+    }
 }
 
 data class AIInputComponent(var currentRoadDirection: Vector2? = null) : Component
