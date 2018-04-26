@@ -30,7 +30,11 @@ class SimScreen(world: World) : KtxScreen {
 
         fun findRandomCarSpawnPosition(): Pair<Vector2, Float> {
             val edge = world.roadGraph.edgeSet().shuffled(MathUtils.random).first()!!
-            val pos = edge.direction.cpy().scl(MathUtils.random() * edge.length).add(edge.src).add(edge.laneDirection)
+            val pos = edge.direction.cpy().scl(MathUtils.random() * edge.length).add(edge.src)
+            if (edge.reversed)
+                pos.add(edge.laneDirection)
+            else
+                pos.sub(edge.laneDirection)
             val angle = edge.direction.angleRad() + PI / 2F
             return Pair(pos, angle.toFloat())
         }
