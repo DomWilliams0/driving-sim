@@ -14,7 +14,9 @@ import com.sun.javafx.geom.Point2D
 import ktx.box2d.body
 import ktx.box2d.filter
 import ms.domwillia.cars.entity.VEHICLE_DIMENSIONS
+import org.jgrapht.graph.DirectedPseudograph
 import org.jgrapht.graph.Pseudograph
+import kotlin.math.PI
 import com.badlogic.gdx.physics.box2d.World as PhysicsWorld
 
 val LANE_WIDTH: Float = VEHICLE_DIMENSIONS.x * 3F
@@ -57,14 +59,24 @@ data class RoadEdge(val id: Int, val src: Vector2, val dst: Vector2, val lanes: 
     var length: Float = Float.NaN // to be set below
     var width: Float = lanes * LANE_WIDTH
 
+    // TODO is direction ever used as-is or always scaled to length?
     val direction: Vector2 = run {
         val dir = dst.cpy().sub(src)
         length = dir.len()
         dir.nor()
     }
-    // TODO is direction ever used as-is or always scaled to length?
+    val reversed = ((direction.angle() % 360) + 360) % 360 > 180
+
+
     val centre: Vector2 = src.cpy().add(direction.x * length / 2F, direction.y * length / 2F)
+    val laneDirection: Vector2 = run {
+        val rot = if (direction.hasSameDirection(Vector2.Y)) PI / 2F else -PI / 2F
+        direction.cpy().rotateRad(rot.toFloat()).scl(LANE_WIDTH)
+    }
 }
+
+typealias NavigationNode = Vector2
+typealias NavigationEdge = Int
 
 class World(path: String) {
     val physics = PhysicsWorld(Vector2.Zero, true).apply {
@@ -79,6 +91,15 @@ class World(path: String) {
                 RoadEdge(nextEdgeId++, src.pos, dst.pos, lanes)
             })
 
+    val navigationGraph = DirectedPseudograph<NavigationNode, NavigationEdge> { src, dst ->
+        val a = roadGraph.vertexSet().find { it.pos == src } ?: throw IllegalArgumentException("missing node $src")
+        val b = roadGraph.vertexSet().find { it.pos == dst } ?: throw IllegalArgumentException("missing node $dst")
+        var id = roadGraph.getEdge(a, b).id
+
+        if (src < dst)
+            id *= -1
+        id
+    }
 
     init {
         fun iterateAllPoints(map: TiledMap, que: ((vertices: FloatArray, closed: Boolean) -> Unit)) {
@@ -190,6 +211,13 @@ class World(path: String) {
             v.maxLanes = roadGraph.edgesOf(v).maxBy(RoadEdge::lanes)?.lanes ?: 0
         }
 
+        // navigation graph
+        for (e in roadGraph.edgeSet()) {
+            navigationGraph.addVertex(e.src)
+            navigationGraph.addVertex(e.dst)
+            navigationGraph.addEdge(e.src, e.dst)
+            navigationGraph.addEdge(e.dst, e.src)
+        }
 
         val vertices = FloatArray(16)
         for (edge in roadGraph.edgeSet()) {
@@ -246,3 +274,5 @@ class World(path: String) {
 
 operator fun Vector2.component1() = x
 operator fun Vector2.component2() = y
+
+operator fun Vector2.compareTo(o: Vector2) = Comparator.comparing<Vector2, Float>(Vector2::x).thenComparing(Vector2::y).compare(this, o)

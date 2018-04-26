@@ -16,6 +16,7 @@ import com.badlogic.gdx.math.Vector2
 import ms.domwillia.cars.view.CameraInput
 import ms.domwillia.cars.world.LANE_WIDTH
 import ms.domwillia.cars.world.World
+import kotlin.math.absoluteValue
 
 const val PPM = 8F
 const val CAMERA_MOVE_SPEED = 1F
